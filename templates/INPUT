@@ -7,7 +7,7 @@ $=============================================================================
 $ MODEL SETUP
 $=============================================================================
 $ Freshwater properties, standard gravity
-SET level={{ waves.water_level }} grav=9.81 rhowat={{ water.water_density }}
+SET level={{ water.water_level }} grav=9.81 rhowat={{ water.water_density }}
 
 $ 1D nonstationary simulation
 MODE NONSTATIONARY ONEDIMENSIONAL
@@ -25,26 +25,26 @@ $=============================================================================
 $ BATHYMETRY
 $=============================================================================
 INPGRID BOTTOM REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP BOTTOM 1.0 'bathymetry.bot' IDLA=3 FREE
+READINP BOTTOM 1.0 'bathymetry.dat' IDLA=3 FREE
 
 $=============================================================================
 $ BREAKWATER POROSITY
 $=============================================================================
 INPGRID POROSITY REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP POROSITY 1.0 'porosity.por' IDLA=3 FREE
+READINP POROSITY 1.0 'porosity.dat' IDLA=3 FREE
 
 INPGRID HSTRUCTURE REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP HSTRUCTURE 1.0 'structure_height.str' IDLA=3 FREE
+READINP HSTRUCTURE 1.0 'structure_height.dat' IDLA=3 FREE
 
 $ Porosity parameters for rock: Dn50={{ breakwater.armour_dn50 }}m, height={{ breakwater.crest_height }}m
-POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{ waves.wave_period }}
+POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{ water.wave_period }}
 
 {%- if vegetation.enable %}
 $=============================================================================
 $ VEGETATION
 $=============================================================================
 INPGRID NPLANTS REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP NPLANTS 1.0 'vegetation_density.veg' IDLA=3 FREE
+READINP NPLANTS 1.0 'vegetation_density.dat' IDLA=3 FREE
 
 VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ vegetation.plant_density }} {{ vegetation.drag_coefficient }}
 {%- endif %}
@@ -52,9 +52,9 @@ VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ vege
 $=============================================================================
 $ WAVE GENERATION
 $=============================================================================
-$ Regular waves: H={{ waves.wave_height }}m, T={{ waves.wave_period }}s
+$ Regular waves: H={{ water.wave_height }}m, T={{ water.wave_period }}s
 BOUNDCOND SIDE WEST BTYPE WEAKREFL &
-          CON REGULAR {{ waves.wave_height }} {{ waves.wave_period }} 0.0
+          CON REGULAR {{ water.wave_height }} {{ water.wave_period }} 0.0
 
 $ Sponge layer at downstream end
 SPONGE EAST 10.0
@@ -83,14 +83,14 @@ $=============================================================================
 $ OUTPUT
 $=============================================================================
 $ Wave gauges
-{%- for i, pos in enumerate(output.wave_gauge_positions) %}
+{%- for i, pos in enumerate(numeric.wave_gauge_positions) %}
 POINTS 'WG{{ "%02d"|format(i+1) }}' {{ pos }} 0.0
 {%- endfor %}
 
 $ Time series output
-{%- for i, pos in enumerate(output.wave_gauge_positions) %}
+{%- for i, pos in enumerate(numeric.wave_gauge_positions) %}
 TABLE 'WG{{ "%02d"|format(i+1) }}' NOHEADER 'wg{{ "%02d"|format(i+1) }}.dat' &
-      WATLEV VEL OUTPUT 0.0 {{ output.output_interval }} SEC
+      WATLEV VEL OUTPUT 000000.000 {{ numeric.output_interval }} SEC
 {%- endfor %}
 
 $ Wave statistics (last 30 minutes by default)
@@ -100,11 +100,11 @@ QUANTITY SETUP dur=1800 sec
 $ Spatial output at end
 FRAME 'channel' 0.0 0.0 0.0 {{ grid.length }} 1.0 {{ grid.nx_cells//4 }} 1
 BLOCK 'channel' NOHEADER 'final_state.mat' LAY-OUT 3 &
-      WATLEV VEL HSIG SETUP OUTPUT {{ numerics.simulation_duration }} 0.0 SEC
+      WATLEV VEL HSIG SETUP OUTPUT 000000.000 {{ numeric.output_interval }} SEC
 
 $=============================================================================
 $ RUN
 $=============================================================================
-COMPUTE 0.0 {{ numerics.time_step }} SEC {{ numerics.simulation_duration }}
+COMPUTE 000000.000 {{ numeric.time_step }} SEC {{ "%010.3f"|format(simulation_duration) }}
 
 STOP

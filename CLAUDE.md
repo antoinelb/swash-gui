@@ -83,3 +83,6 @@ Simulations create directories with format: `simulations/<name>_<hash>/`
 - `docs/swash_manual.md`: SWASH user manual for reference
 - `docs/overflowing_report.md`: Experimental protocol for hydrodynamic behavior of vegetated breakwaters (in French)
 - `docs/stability_report.md`: Armourstone design analysis for low-crested breakwaters in Baie des Bacon
+
+### Commit Guidelines
+- NEVER mention Claude, Claude Code, or Anthropic in commit messages

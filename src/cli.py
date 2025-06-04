@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from src.utils.print import done_print
+from src.utils.print import done_print, load_print
 
 from .config import Config, read_config, save_config
 from .simulation import run_simulation
@@ -87,10 +87,12 @@ def _run(
     (r) Runs the experiment.
     """
     for config_ in _expand_paths(configs):
+        load_print(f"Running simulation {config_.name}...")
         path = Path(config_)
         config = read_config(path)
         save_config(config, path)
         run_simulation(config)
+        done_print("Ran simulation.")
 
 
 def _run_dashboard() -> None:
