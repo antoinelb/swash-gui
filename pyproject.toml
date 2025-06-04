@@ -8,7 +8,6 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "dash>=3.0.4",
     "jinja2>=3.1.0",
     "numpy>=2.0.0",
     "plotly>=6.1.2",
@@ -18,6 +17,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "typer>=0.16.0",
     "kaleido==0.2.1",
+    "dash>=3.0.4",
 ]
 
 [project.scripts]

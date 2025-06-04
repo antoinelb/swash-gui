@@ -97,7 +97,11 @@ def _run_dashboard() -> None:
     """
     (d) Runs the dashboard
     """
-    pass
+    from src.dashboard import create_app
+
+    app = create_app()
+    done_print("Starting dashboard at http://127.0.0.1:8000")
+    app.run(debug=False, host="127.0.0.1", port=8000)
 
 
 def _expand_paths(paths: list[str]) -> list[Path]:
