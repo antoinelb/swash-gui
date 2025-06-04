@@ -1,25 +1,41 @@
-hash: 32698cef  # hash of the config (automatically modified)
+hash: d2b6e5e9  # hash of the config (automatically modified)
+grid: # computational grid configuration
+  hash: f144f5d3  # hash of the config (automatically modified)
+  length: 112.0 # length of the computational domain (m)
+  nx_cells: 500 # number of cells in x-direction
+  n_layers: 2 # number of vertical layers (2-3 recommended)
 breakwater: # configuration for the breakwater
   hash: 11219c7b  # hash of the config (automatically modified)
-  crest_height: 2.0 # height of the crest from the floor (m)
+  start_position: 100.0 # position of the start of the breakwater (m)
+  end_position: 200.0 # position of the end of the breakwater (m)
+  crest_height: 2.0  # height of the crest from the floor (m)
   crest_width: 2.0 # crest width (m)
   porosity: 0.4 # porosity of the breakwater (-)
   stone_density: 2600.0 # density of the stones (kg/m³)
   armour_dn50: 1.15 # median diameter of the armour stones (m)
   filter_dn50: 0.5 # median diameter of the filter stones (m)
   core_dn50: 0.2 # median diameter of the core stones (m)
-  start_position: 100.0 # position of the start of the breakwater (m)
-  end_position: 200.0 # position of the end of the breakwater (m)
-vegetation: # configuration for the vegetation on the breakwater
-  hash: 581f1ef1  # hash of the config (automatically modified)
-  enable: false # if there is generation on the crest
 water: # configuration for the water in the channel or bay
   hash: 356913a6  # hash of the config (automatically modified)
-  water_level: 1.0 # height of the still water (m)
-  wave_height: 0.5 # height of the waves (m)
-  wave_period: 6.0 # period of each wave (s)
+  water_level: 1.0 # still water level (m)
   water_density: 1000.0 # density of the water (kg/m³)
-numeric: # configuration for the other numerical parameters
-  hash: 9b800edf  # hash of the config (automatically modified)
-  length: 50.0 # length of the channel or bay (m)
-  n_waves: 50 # number of waves during the simulation (-)
+  wave_height: 0.5 # wave height for regular waves (m)
+  wave_period: 6.0 # wave period for regular waves (s)
+vegetation: # configuration for the vegetation on the breakwater
+  hash: ee27a923  # hash of the config (automatically modified)
+  enable: false # enable vegetation on the breakwater crest
+  plant_height: 0.5 # height of plants (m)
+  plant_diameter: 0.01 # diameter of plant stems (m)
+  plant_density: 100.0 # number of plant stems per square meter
+  drag_coefficient: 1.0 # drag coefficient for vegetation
+numeric: # configuration for the numerical parameters
+  hash: 0d7f7996  # hash of the config (automatically modified)
+  n_waves: 50 # number of waves to simulate
+  time_step: 0.05 # initial time step (s) - adaptive time stepping will adjust
+  wave_gauge_positions: # x-positions of wave gauges (m)
+  - 20.0
+  - 60.0
+  - 65.0
+  - 80.0
+  - 100.0
+  output_interval: 0.1 # time interval for output (s)
