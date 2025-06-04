@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -5,6 +6,7 @@ from jinja2 import Template
 
 from .config import Config
 from .utils.paths import root_dir
+from .utils.print import done_print, error_print, load_print
 
 ############
 # external #
@@ -15,8 +17,9 @@ def run_simulation(config: Config) -> None:
     """Run a SWASH simulation based on the provided configuration.
 
     Creates the necessary input files (INPUT, bathymetry, porosity, vegetation)
-    in the simulation directory.
+    in the simulation directory and executes SWASH.
     """
+    load_print(f"Running simulation {config.name}...")
     template_dir = root_dir / "templates"
     simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
     simulation_dir.mkdir(parents=True, exist_ok=True)
@@ -30,6 +33,9 @@ def run_simulation(config: Config) -> None:
     _create_input_file(
         config, simulation_dir=simulation_dir, template_dir=template_dir
     )
+
+    # Execute SWASH
+    _execute_swash(config, simulation_dir=simulation_dir)
 
 
 ############
@@ -159,3 +165,86 @@ def _create_input_file(
     output_path = simulation_dir / "INPUT"
     with open(output_path, "w") as f:
         f.write(rendered)
+
+
+def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
+    """Execute SWASH simulation and handle errors.
+
+    Runs SWASH in the simulation directory and checks for errors in
+    the PRINT and Errfile outputs.
+    """
+    load_print("Executing SWASH simulation...")
+
+    try:
+        # Run SWASH in the simulation directory
+        result = subprocess.run(
+            ["swash"],
+            cwd=simulation_dir,
+            capture_output=True,
+            text=True,
+            timeout=3600,  # 1 hour timeout
+        )
+
+        # Check for errors in output files
+        error_msgs = _check_swash_errors(simulation_dir)
+
+        if error_msgs:
+            error_print(
+                f"SWASH simulation failed with {len(error_msgs)} error(s)"
+            )
+            for msg in error_msgs:
+                error_print(f"  {msg}", indent=2)
+            return
+
+        # Check if SWASH completed successfully
+        if result.returncode != 0:
+            error_print(f"SWASH exited with code {result.returncode}")
+            if result.stderr:
+                error_print(f"  {result.stderr.strip()}", indent=2)
+            return
+
+        done_print("SWASH simulation completed successfully")
+
+    except subprocess.TimeoutExpired:
+        error_print("SWASH simulation timed out (1 hour limit)")
+    except FileNotFoundError:
+        error_print(
+            "SWASH executable not found. Please ensure SWASH is installed and in PATH"
+        )
+    except Exception as e:
+        error_print(f"Unexpected error running SWASH: {e}")
+
+
+def _check_swash_errors(simulation_dir: Path) -> list[str]:
+    """Check SWASH output files for errors and return error messages with locations."""
+    errors = []
+
+    # Check Errfile
+    errfile_path = simulation_dir / "Errfile"
+    if errfile_path.exists():
+        try:
+            with open(errfile_path, "r") as f:
+                errfile_content = f.read().strip()
+            if errfile_content:
+                errors.append(f"Errfile: {errfile_content}")
+        except Exception:
+            pass
+
+    # Check PRINT file for severe errors and errors
+    print_path = simulation_dir / "PRINT"
+    if print_path.exists():
+        try:
+            with open(print_path, "r") as f:
+                lines = f.readlines()
+
+            for i, line in enumerate(lines, 1):
+                line = line.strip()
+                if "** Severe error" in line or "** Error" in line:
+                    # Extract error message and add line number
+                    error_msg = line.replace("**", "").strip()
+                    errors.append(f"PRINT line {i}: {error_msg}")
+
+        except Exception:
+            pass
+
+    return errors

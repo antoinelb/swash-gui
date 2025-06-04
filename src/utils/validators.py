@@ -28,20 +28,20 @@ def hash_config(ignore: list[str] = []) -> Callable[..., Any]:
     """
 
     def fct_(model: pydantic.BaseModel) -> pydantic.BaseModel:
-        model.hash = _hash_config(  # pyright: ignore
+        model.hash = _hash_config(  # type: ignore
             {
                 key: val
                 for key, val in model.model_dump().items()
                 if key not in ignore
             },
-            model.hash,  # pyright: ignore
+            model.hash,  # type: ignore
         )
         return model
 
-    return pydantic.model_validator(mode="after")(fct_)  # pyright: ignore
+    return pydantic.model_validator(mode="after")(fct_)  # type: ignore
 
 
-def parse_config(field: str, fct: Callable) -> Callable:  # pyright: ignore
+def parse_config(field: str, fct: Callable) -> Callable:  # type: ignore
     """
     Create a field validator that parses configuration.
 
@@ -62,20 +62,20 @@ def parse_config(field: str, fct: Callable) -> Callable:  # pyright: ignore
     """
 
     def fct_(
-        cls: type[pydantic.BaseModel],  # pyright: ignore
+        cls: type[pydantic.BaseModel],  # type: ignore
         val: dict[str, Any] | pydantic.BaseModel | None,
     ) -> pydantic.BaseModel:
         if isinstance(val, pydantic.BaseModel):
             return val
         elif val is None:
-            return fct()  # pyright: ignore
+            return fct()  # type: ignore
         else:
-            return fct(val)  # pyright: ignore
+            return fct(val)  # type: ignore
 
     return pydantic.field_validator(field, mode="before")(fct_)
 
 
-def set_field(field: str, value: Any) -> Callable:  # pyright: ignore
+def set_field(field: str, value: Any) -> Callable:  # type: ignore
     """
     Create a field validator that sets a field to a fixed value.
 
@@ -92,15 +92,13 @@ def set_field(field: str, value: Any) -> Callable:  # pyright: ignore
         A pydantic field validator function
     """
 
-    def fct_(
-        cls: type[pydantic.BaseModel], val: Any  # pyright: ignore
-    ) -> Any:
+    def fct_(cls: type[pydantic.BaseModel], val: Any) -> Any:  # type: ignore
         return value
 
     return pydantic.field_validator(field, mode="before")(fct_)
 
 
-def set_seed_if_missing(field: str) -> Callable:  # pyright: ignore
+def set_seed_if_missing(field: str) -> Callable:  # type: ignore
     """
     Create a field validator that sets a random seed if none is provided.
 

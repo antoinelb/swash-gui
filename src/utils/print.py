@@ -75,7 +75,7 @@ def done_print(
         )
 
 
-def warn_print(
+def error_print(
     text: str, symbol: str = "!", indent: int = 0, echo: bool = True
 ) -> None:
     """
