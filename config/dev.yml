@@ -1,0 +1,25 @@
+hash: 32698cef  # hash of the config (automatically modified)
+breakwater: # configuration for the breakwater
+  hash: 11219c7b  # hash of the config (automatically modified)
+  crest_height: 2.0 # height of the crest from the floor (m)
+  crest_width: 2.0 # crest width (m)
+  porosity: 0.4 # porosity of the breakwater (-)
+  stone_density: 2600.0 # density of the stones (kg/m³)
+  armour_dn50: 1.15 # median diameter of the armour stones (m)
+  filter_dn50: 0.5 # median diameter of the filter stones (m)
+  core_dn50: 0.2 # median diameter of the core stones (m)
+  start_position: 100.0 # position of the start of the breakwater (m)
+  end_position: 200.0 # position of the end of the breakwater (m)
+vegetation: # configuration for the vegetation on the breakwater
+  hash: 581f1ef1  # hash of the config (automatically modified)
+  enable: false # if there is generation on the crest
+water: # configuration for the water in the channel or bay
+  hash: 356913a6  # hash of the config (automatically modified)
+  water_level: 1.0 # height of the still water (m)
+  wave_height: 0.5 # height of the waves (m)
+  wave_period: 6.0 # period of each wave (s)
+  water_density: 1000.0 # density of the water (kg/m³)
+numeric: # configuration for the other numerical parameters
+  hash: 9b800edf  # hash of the config (automatically modified)
+  length: 50.0 # length of the channel or bay (m)
+  n_waves: 50 # number of waves during the simulation (-)
