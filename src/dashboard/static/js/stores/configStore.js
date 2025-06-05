@@ -36,30 +36,40 @@ export function createConfigStore() {
       }
       
       const finalKey = keys[keys.length - 1];
-      current[finalKey] = typeof value === 'string' && !isNaN(value) 
-        ? parseFloat(value) 
-        : value;
+      
+      // Handle parsing similar to the example project
+      if (typeof value === 'string' && value !== '') {
+        const numericValue = parseFloat(value.replace(',', '.'));
+        current[finalKey] = !isNaN(numericValue) ? numericValue : value;
+      } else {
+        current[finalKey] = value;
+      }
       
       // If water parameters changed, recalculate wavelength
       if (path.startsWith('water.') && (path.includes('wave_period') || path.includes('water_level'))) {
         try {
-          // Create a temporary config to get updated wavelength
-          const tempConfig = { ...updated };
-          const response = await fetch('/api/wavelength', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              wave_period: tempConfig.water.wave_period,
-              water_level: tempConfig.water.water_level
-            })
-          });
+          // Only recalculate if we have valid values
+          const wavePeriod = updated.water.wave_period;
+          const waterLevel = updated.water.water_level;
           
-          if (response.ok) {
-            const data = await response.json();
-            updated.water.wavelength = data.wavelength;
+          if (typeof wavePeriod === 'number' && wavePeriod > 0 && 
+              typeof waterLevel === 'number' && waterLevel > 0) {
+            const response = await fetch('/api/wavelength', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                wave_period: wavePeriod,
+                water_level: waterLevel
+              })
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              updated.water.wavelength = data.wavelength;
+            }
           }
         } catch (error) {
-          console.warn('Failed to update wavelength:', error);
+          // Silently ignore wavelength calculation errors
         }
       }
       
