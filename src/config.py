@@ -113,7 +113,7 @@ class VegetationConfig(pydantic.BaseModel):
         default=0.01, description="Diameter of plant stems (m)"
     )
     plant_density: float = pydantic.Field(
-        default=100, description="Number of plant stems per square meter"
+        default=1.0, description="Number of plant stems per square meter"
     )
     drag_coefficient: float = pydantic.Field(
         default=1.0, description="Drag coefficient for vegetation"
@@ -188,12 +188,14 @@ class Config(pydantic.BaseModel):
     def simulation_duration(self) -> float:
         """Calculate total simulation duration based on number of waves and period."""
         return self.numeric.n_waves * self.water.wave_period
-    
-    @property 
+
+    @property
     def breakwater_end_position(self) -> float:
         """Calculate breakwater end position based on start position, crest width, and slope."""
         # Total base width = crest width + 2 * (height * slope)
-        base_width = self.breakwater.crest_width + 2 * (self.breakwater.crest_height * self.breakwater.slope)
+        base_width = self.breakwater.crest_width + 2 * (
+            self.breakwater.crest_height * self.breakwater.slope
+        )
         return self.numeric.breakwater_start_position + base_width
 
 
@@ -276,7 +278,9 @@ def _add_breakwater_comments(
         "height of the crest from the floor (m)", "crest_height"
     )
     config_.yaml_add_eol_comment("crest width (m)", "crest_width")
-    config_.yaml_add_eol_comment("slope of the breakwater sides (H:V ratio)", "slope")
+    config_.yaml_add_eol_comment(
+        "slope of the breakwater sides (H:V ratio)", "slope"
+    )
     config_.yaml_add_eol_comment("porosity of the breakwater (-)", "porosity")
     config_.yaml_add_eol_comment(
         "density of the stones (kg/m³)", "stone_density"

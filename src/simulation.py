@@ -58,8 +58,8 @@ def _create_structure_height_file(
     structure_height = np.zeros_like(x)
 
     # Set structure height within breakwater extent
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
+    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
+        x <= config.breakwater_end_position
     )
     structure_height[breakwater_mask] = config.breakwater.crest_height
 
@@ -99,8 +99,8 @@ def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
     porosity = np.zeros_like(x)
 
     # Set porosity within breakwater extent
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
+    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
+        x <= config.breakwater_end_position
     )
     porosity[breakwater_mask] = config.breakwater.porosity
 
@@ -113,7 +113,8 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     """Create vegetation density file.
 
     The vegetation file contains the number of plant stems per unit area
-    at each grid point. Vegetation is placed on the breakwater crest.
+    at each grid point. Vegetation is placed only on the breakwater crest
+    where the structure height equals the crest height.
     """
     # Create grid points
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
@@ -121,11 +122,22 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     # Initialize vegetation density array
     vegetation_density = np.zeros_like(x)
 
-    # Set vegetation density on breakwater crest
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
-    )
-    vegetation_density[breakwater_mask] = config.vegetation.plant_density
+    if config.vegetation.enable:
+        # Calculate breakwater geometry to find crest locations
+        breakwater_start = config.numeric.breakwater_start_position
+        breakwater_end = config.breakwater_end_position
+        crest_height = config.breakwater.crest_height
+        slope = config.breakwater.slope
+        
+        # Calculate crest start and end positions
+        # Slope distance from base to crest: height * slope
+        slope_distance = crest_height * slope
+        crest_start = breakwater_start + slope_distance
+        crest_end = breakwater_end - slope_distance
+        
+        # Set vegetation density only on the flat crest area
+        crest_mask = (x >= crest_start) & (x <= crest_end)
+        vegetation_density[crest_mask] = config.vegetation.plant_density
 
     # Write to file
     output_path = simulation_dir / "vegetation_density.dat"
@@ -175,6 +187,11 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
     """
     load_print("Executing SWASH simulation...")
 
+    # Remove existing error files to get clean error reporting
+    errfile_path = simulation_dir / "Errfile"
+    if errfile_path.exists():
+        errfile_path.unlink()
+
     try:
         # Run SWASH in the simulation directory
         result = subprocess.run(
@@ -213,6 +230,7 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
         )
     except Exception as e:
         error_print(f"Unexpected error running SWASH: {e}")
+
 
 
 def _check_swash_errors(simulation_dir: Path) -> list[str]:
