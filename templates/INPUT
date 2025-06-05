@@ -46,6 +46,7 @@ POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{
 $=============================================================================
 $ VEGETATION
 $=============================================================================
+$ Uniform vegetation: height={{ vegetation.plant_height }}m, diameter={{ vegetation.plant_diameter }}m, density={{ "%d"|format(vegetation.plant_density|int) }}, drag={{ vegetation.drag_coefficient }}
 VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ "%d"|format(vegetation.plant_density|int) }} {{ vegetation.drag_coefficient }}
 {%- endif %}
 
