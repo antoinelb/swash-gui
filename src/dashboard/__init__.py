@@ -1,3 +1,6 @@
-from .app import create_app
+__all__ = [
+    "run_server",
+]
 
-__all__ = ["create_app"]
+from .app import run_server
+

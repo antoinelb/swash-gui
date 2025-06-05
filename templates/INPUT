@@ -30,6 +30,9 @@ READINP BOTTOM 1.0 'bathymetry.dat' IDLA=3 FREE
 $=============================================================================
 $ BREAKWATER POROSITY
 $=============================================================================
+{%- set breakwater_end = numeric.breakwater_start_position + breakwater.crest_width + 2 * (breakwater.crest_height * breakwater.slope) %}
+$ Breakwater: {{ numeric.breakwater_start_position }}m to {{ "%.1f"|format(breakwater_end) }}m, slope={{ breakwater.slope }}:1
+
 INPGRID POROSITY REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
 READINP POROSITY 1.0 'porosity.dat' IDLA=3 FREE
 

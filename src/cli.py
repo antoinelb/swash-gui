@@ -4,9 +4,10 @@ from pathlib import Path
 
 import typer
 
+from src.dashboard import run_server
 from src.utils.print import done_print
 
-from .config import Config, read_config, save_config
+from .config import Config, read_config, write_config
 from .simulation import run_simulation
 
 ############
@@ -69,11 +70,11 @@ def _create_or_update(
         path = Path(file)
         try:
             config = read_config(path)
-            save_config(config, path)
+            write_config(config, path)
             done_print(f"Updated config {file}.")
         except FileNotFoundError:
             config = Config(name=path.stem)
-            save_config(config, path)
+            write_config(config, path)
             done_print(f"Created config {file}.")
 
 
@@ -89,7 +90,7 @@ def _run(
     for config_ in _expand_paths(configs):
         path = Path(config_)
         config = read_config(path)
-        save_config(config, path)
+        write_config(config, path)
         run_simulation(config)
 
 
@@ -97,11 +98,7 @@ def _run_dashboard() -> None:
     """
     (d) Runs the dashboard
     """
-    from src.dashboard import create_app
-
-    app = create_app()
-    done_print("Starting dashboard at http://127.0.0.1:8000")
-    app.run(debug=False, host="127.0.0.1", port=8000)
+    run_server()
 
 
 def _expand_paths(paths: list[str]) -> list[Path]:

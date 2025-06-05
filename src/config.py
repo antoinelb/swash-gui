@@ -41,20 +41,15 @@ class BreakwaterConfig(pydantic.BaseModel):
         description="Hash of the configuration (automatically generated)",
     )
 
-    # position
-    start_position: float = pydantic.Field(
-        default=100.0, description="Start position of the breakwater (m)"
-    )
-    end_position: float = pydantic.Field(
-        default=102.0, description="End position of the breakwater (m)"
-    )
-
     # geometry
     crest_height: float = pydantic.Field(
         default=2.0, description="Height of the crest from the floor (m)"
     )
     crest_width: float = pydantic.Field(
         default=2.0, description="Width of the crest (m)"
+    )
+    slope: float = pydantic.Field(
+        default=2.0, description="Slope of the breakwater sides (H:V ratio)"
     )
     porosity: float = pydantic.Field(
         default=0.4, description="Porosity of the breakwater (0-1)"
@@ -142,6 +137,11 @@ class NumericConfig(pydantic.BaseModel):
         description="Initial time step (s) - adaptive time stepping will adjust this",
     )
 
+    # breakwater position
+    breakwater_start_position: float = pydantic.Field(
+        default=100.0, description="Start position of the breakwater (m)"
+    )
+
     # gauge positions in x (m)
     wave_gauge_positions: list[float] = pydantic.Field(
         default=[20.0, 60.0, 65.0, 80.0, 100.0],
@@ -188,6 +188,13 @@ class Config(pydantic.BaseModel):
     def simulation_duration(self) -> float:
         """Calculate total simulation duration based on number of waves and period."""
         return self.numeric.n_waves * self.water.wave_period
+    
+    @property 
+    def breakwater_end_position(self) -> float:
+        """Calculate breakwater end position based on start position, crest width, and slope."""
+        # Total base width = crest width + 2 * (height * slope)
+        base_width = self.breakwater.crest_width + 2 * (self.breakwater.crest_height * self.breakwater.slope)
+        return self.numeric.breakwater_start_position + base_width
 
 
 ############
@@ -216,7 +223,7 @@ def read_config(path: Path | str) -> Config:
     return Config(name=path.stem, **config)
 
 
-def save_config(config: Config, path: Path) -> None:
+def write_config(config: Config, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     config_ = _add_comments(config)
     del config_["name"]
@@ -269,6 +276,7 @@ def _add_breakwater_comments(
         "height of the crest from the floor (m)", "crest_height"
     )
     config_.yaml_add_eol_comment("crest width (m)", "crest_width")
+    config_.yaml_add_eol_comment("slope of the breakwater sides (H:V ratio)", "slope")
     config_.yaml_add_eol_comment("porosity of the breakwater (-)", "porosity")
     config_.yaml_add_eol_comment(
         "density of the stones (kg/m³)", "stone_density"
@@ -281,12 +289,6 @@ def _add_breakwater_comments(
     )
     config_.yaml_add_eol_comment(
         "median diameter of the core stones (m)", "core_dn50"
-    )
-    config_.yaml_add_eol_comment(
-        "position of the start of the breakwater (m)", "start_position"
-    )
-    config_.yaml_add_eol_comment(
-        "position of the end of the breakwater (m)", "end_position"
     )
     return config_
 
@@ -358,6 +360,9 @@ def _add_numeric_comments(config: NumericConfig) -> ruamel.yaml.CommentedMap:
     config_.yaml_add_eol_comment(
         "initial time step (s) - adaptive time stepping will adjust",
         "time_step",
+    )
+    config_.yaml_add_eol_comment(
+        "start position of the breakwater (m)", "breakwater_start_position"
     )
     config_.yaml_add_eol_comment(
         "x-positions of wave gauges (m)", "wave_gauge_positions"
