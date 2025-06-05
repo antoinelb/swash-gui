@@ -10,14 +10,14 @@ breakwater: # configuration for the breakwater
   crest_width: 3.0 # crest width (m)
   slope: 1.75 # slope of the breakwater sides (H:V ratio)
   porosity: 0.4 # porosity of the breakwater (-)
-  stone_density: 2600.0 # density of the stones (kg/m³)
+  stone_density: 2600.0 # density of the stones (kg/m^3)
   armour_dn50: 1.15 # median diameter of the armour stones (m)
   filter_dn50: 0.5 # median diameter of the filter stones (m)
   core_dn50: 0.2 # median diameter of the core stones (m)
 water: # configuration for the water in the channel or bay
   hash: 04f17f4d  # hash of the config (automatically modified)
   water_level: 1.0 # still water level (m)
-  water_density: 1000.0 # density of the water (kg/m³)
+  water_density: 1000.0 # density of the water (kg/m^3)
   wave_height: 0.6 # wave height for regular waves (m)
   wave_period: 6.0 # wave period for regular waves (s)
 vegetation: # configuration for the vegetation on the breakwater

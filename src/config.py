@@ -55,7 +55,7 @@ class BreakwaterConfig(pydantic.BaseModel):
         default=0.4, description="Porosity of the breakwater (0-1)"
     )
     stone_density: float = pydantic.Field(
-        default=2600, description="Density of the stones (kg/m³)"
+        default=2600, description="Density of the stones (kg/m^3)"
     )
     armour_dn50: float = pydantic.Field(
         default=1.150, description="Median diameter of the armour stones (m)"
@@ -81,7 +81,7 @@ class WaterConfig(pydantic.BaseModel):
         default=1.0, description="Still water level (m)"
     )
     water_density: float = pydantic.Field(
-        default=1000, description="Density of water (kg/m³)"
+        default=1000, description="Density of water (kg/m^3)"
     )
 
     # regular wave parameters
@@ -283,7 +283,7 @@ def _add_breakwater_comments(
     )
     config_.yaml_add_eol_comment("porosity of the breakwater (-)", "porosity")
     config_.yaml_add_eol_comment(
-        "density of the stones (kg/m³)", "stone_density"
+        "density of the stones (kg/m^3)", "stone_density"
     )
     config_.yaml_add_eol_comment(
         "median diameter of the armour stones (m)", "armour_dn50"
@@ -327,7 +327,7 @@ def _add_water_comments(config: WaterConfig) -> ruamel.yaml.CommentedMap:
         "wave period for regular waves (s)", "wave_period"
     )
     config_.yaml_add_eol_comment(
-        "density of the water (kg/m³)", "water_density"
+        "density of the water (kg/m^3)", "water_density"
     )
     return config_
 
