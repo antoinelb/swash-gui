@@ -28,8 +28,6 @@ def run_simulation(config: Config) -> None:
     _create_bathymetry_file(config, simulation_dir=simulation_dir)
     _create_porosity_file(config, simulation_dir=simulation_dir)
     _create_structure_height_file(config, simulation_dir=simulation_dir)
-    if config.vegetation.enable:
-        _create_vegetation_file(config, simulation_dir=simulation_dir)
     _create_input_file(
         config, simulation_dir=simulation_dir, template_dir=template_dir
     )
@@ -58,8 +56,8 @@ def _create_structure_height_file(
     structure_height = np.zeros_like(x)
 
     # Set structure height within breakwater extent
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
+    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
+        x <= config.breakwater_end_position
     )
     structure_height[breakwater_mask] = config.breakwater.crest_height
 
@@ -99,8 +97,8 @@ def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
     porosity = np.zeros_like(x)
 
     # Set porosity within breakwater extent
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
+    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
+        x <= config.breakwater_end_position
     )
     porosity[breakwater_mask] = config.breakwater.porosity
 
@@ -122,8 +120,8 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     vegetation_density = np.zeros_like(x)
 
     # Set vegetation density on breakwater crest
-    breakwater_mask = (x >= config.breakwater.start_position) & (
-        x <= config.breakwater.end_position
+    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
+        x <= config.breakwater_end_position
     )
     vegetation_density[breakwater_mask] = config.vegetation.plant_density
 
@@ -213,6 +211,7 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
         )
     except Exception as e:
         error_print(f"Unexpected error running SWASH: {e}")
+
 
 
 def _check_swash_errors(simulation_dir: Path) -> list[str]:

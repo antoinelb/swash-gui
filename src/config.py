@@ -113,7 +113,7 @@ class VegetationConfig(pydantic.BaseModel):
         default=0.01, description="Diameter of plant stems (m)"
     )
     plant_density: float = pydantic.Field(
-        default=100, description="Number of plant stems per square meter"
+        default=10, description="Number of plant stems per square meter"
     )
     drag_coefficient: float = pydantic.Field(
         default=1.0, description="Drag coefficient for vegetation"

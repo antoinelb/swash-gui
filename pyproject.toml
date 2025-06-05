@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 swash-gui = "src.cli:run_cli"
+swg = "src.cli:run_cli"
 
 [build-system]
 requires = ["hatchling"]

@@ -46,10 +46,7 @@ POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{
 $=============================================================================
 $ VEGETATION
 $=============================================================================
-INPGRID NPLANTS REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP NPLANTS 1.0 'vegetation_density.dat' IDLA=3 FREE
-
-VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ vegetation.plant_density }} {{ vegetation.drag_coefficient }}
+VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ "%d"|format(vegetation.plant_density|int) }} {{ vegetation.drag_coefficient }}
 {%- endif %}
 
 $=============================================================================
