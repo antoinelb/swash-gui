@@ -241,6 +241,21 @@ h3 {
   width: 100%;
 }
 
+/* Remove number input arrows/spinners */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"]::-moz-spin-box {
+  -moz-appearance: none;
+}
+
 .field input:focus {
   outline: none;
   border-color: var(--blue);

@@ -8,6 +8,22 @@ export function createBreakwaterDiagram(container, configStore) {
   const render = (config) => {
     if (!config) return;
     
+    // Validate required numeric values before proceeding
+    const requiredValues = [
+      config.numeric?.breakwater_start_position,
+      config.breakwater?.crest_height,
+      config.breakwater?.crest_width,
+      config.breakwater?.slope,
+      config.water?.water_level,
+      config.water?.wave_height,
+      config.water?.wave_period
+    ];
+    
+    if (requiredValues.some(val => val === undefined || val === null || val === '' || isNaN(val))) {
+      container.innerHTML = '<h3>Breakwater Cross-Section</h3><p style="color: var(--subtext0); padding: 20px;">Complete the configuration to see the diagram</p>';
+      return;
+    }
+    
     container.innerHTML = '<h3>Breakwater Cross-Section</h3>';
     
     // SVG dimensions and margins
@@ -118,28 +134,30 @@ export function createBreakwaterDiagram(container, configStore) {
     
     // Add sinusoidal waves
     const wavelength = config.water.wavelength; // Get from API
-    const waveAmplitude = (config.water.wave_height / 2) * scale;
-    const wavelengthScaled = wavelength * scale;
-    
-    // Create wave path
-    const wavePoints = [];
-    const numWavePoints = Math.ceil(fullPlotWidth / 2); // Point every 2 pixels
-    
-    for (let i = 0; i <= numWavePoints; i++) {
-      const x = (i * 2);
-      const realX = x / scale + fullDiagramStart; // Convert back to real coordinates
-      const wavePhase = (2 * Math.PI * realX) / wavelength;
-      const waveElevation = waveAmplitude * Math.sin(wavePhase);
-      const y = waterY - waveElevation;
-      wavePoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+    if (wavelength && !isNaN(wavelength) && wavelength > 0) {
+      const waveAmplitude = (config.water.wave_height / 2) * scale;
+      const wavelengthScaled = wavelength * scale;
+      
+      // Create wave path
+      const wavePoints = [];
+      const numWavePoints = Math.ceil(fullPlotWidth / 2); // Point every 2 pixels
+      
+      for (let i = 0; i <= numWavePoints; i++) {
+        const x = (i * 2);
+        const realX = x / scale + fullDiagramStart; // Convert back to real coordinates
+        const wavePhase = (2 * Math.PI * realX) / wavelength;
+        const waveElevation = waveAmplitude * Math.sin(wavePhase);
+        const y = waterY - waveElevation;
+        wavePoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+      }
+      
+      g.appendChild(svg('path', {
+        d: wavePoints.join(' '),
+        stroke: 'var(--blue)',
+        'stroke-width': 2,
+        fill: 'none'
+      }));
     }
-    
-    g.appendChild(svg('path', {
-      d: wavePoints.join(' '),
-      stroke: 'var(--blue)',
-      'stroke-width': 2,
-      fill: 'none'
-    }));
     
     // Water level label (will be added as overlay later)
     
@@ -216,13 +234,16 @@ export function createBreakwaterDiagram(container, configStore) {
     }, [`Height: ${config.breakwater.crest_height}m`]));
     
     // Wave parameters label
-    g.appendChild(svg('text', {
-      x: 10,
-      y: waterY - waveAmplitude - 15,
-      'text-anchor': 'start',
-      fill: 'var(--blue)',
-      'font-size': '11'
-    }, [`H=${config.water.wave_height}m, T=${config.water.wave_period}s, λ=${wavelength.toFixed(1)}m`]));
+    if (wavelength && !isNaN(wavelength) && wavelength > 0) {
+      const waveAmplitude = (config.water.wave_height / 2) * scale;
+      g.appendChild(svg('text', {
+        x: 10,
+        y: waterY - waveAmplitude - 15,
+        'text-anchor': 'start',
+        fill: 'var(--blue)',
+        'font-size': '11'
+      }, [`H=${config.water.wave_height}m, T=${config.water.wave_period}s, λ=${wavelength.toFixed(1)}m`]));
+    }
     
     // Wave gauges
     config.numeric.wave_gauge_positions.forEach((pos, i) => {
@@ -296,18 +317,6 @@ export function createBreakwaterDiagram(container, configStore) {
       const breakwaterCenterInSvg = (breakwaterCenter - fullDiagramStart) * scale + margin.left;
       const viewportCenter = svgContainer.clientWidth / 2;
       const centerScrollOffset = breakwaterCenterInSvg - viewportCenter;
-      console.log('Centering breakwater:', {
-        breakwaterStart,
-        breakwaterEnd,
-        breakwaterCenter,
-        scale,
-        fullDiagramStart,
-        breakwaterCenterInSvg,
-        viewportCenter,
-        centerScrollOffset,
-        scrollWidth: svgContainer.scrollWidth,
-        clientWidth: svgContainer.clientWidth
-      });
       svgContainer.scrollLeft = Math.max(0, centerScrollOffset);
     });
   };

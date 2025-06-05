@@ -1,0 +1,242 @@
+@import "./header.css";
+@import "./platform.css";
+
+:root {
+  --theme: 270, 82%, 35%;
+  --theme-lightest: 270, 82%, 50%;
+  --theme-lighter: 270, 82%, 40%;
+  --theme-darker: 270, 82%, 30%;
+  --theme-darkest: 270, 82%, 20%;
+  --info-box: oklch(10% 0.2028 298.14);
+  --bg-dark: 215, 15%, 5%;
+  --fg-dark: 0, 0%, 95%;
+  --bg-light: 0, 0%, 95%;
+  --fg-light: 215, 15%, 5%;
+  --error-bg: oklch(10% 0.176 29.23);
+  --error-border: oklch(40% 0.176 29.23);
+  --correct: 150, 50%, 30%;
+  --hotkey: 240, 20%, 20%;
+}
+
+html {
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  width: 100vw;
+}
+
+body {
+  --bg: var(--bg-dark);
+  --fg: var(--fg-dark);
+  --theme-more: var(--theme-lighter);
+  --theme-most: var(--theme-lightest);
+  background: hsl(var(--bg));
+  font-size: 1.1rem;
+  color: hsl(var(--fg));
+  cursor: default;
+  display: grid;
+  font-family: "Cormorant Upright", serif;
+  grid-template-rows: max-content 1fr;
+  height: 100%;
+  margin: 0;
+
+  &.light {
+    --bg: var(--bg-light);
+    --fg: var(--fg-light);
+    --theme-more: var(--theme-lighter);
+    --theme-most: var(--theme-lightest);
+  }
+}
+
+#svg-sprite {
+  height: 0;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+
+button,
+input[type="submit"],
+a {
+  align-items: center;
+  background: hsla(var(--theme), 0.75);
+  border: none;
+  border-radius: 1em;
+  box-shadow: 0 0.5em 1em 0.25em hsla(var(--theme), 0.25);
+  color: hsl(var(--fg-dark));
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  height: 2.5em;
+  justify-content: center;
+  padding: 0 1em;
+  transition: background 300ms;
+  width: auto;
+
+  &:hover {
+    background: hsl(var(--theme-more));
+    outline: none;
+    color: hsl(var(--fg-dark));
+  }
+
+  &:active {
+    background: hsl(var(--theme-most));
+    outline: none;
+    color: hsl(var(--fg-dark));
+  }
+
+  &[disabled] {
+    box-shadow: none;
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+input {
+  background: none;
+  border: none;
+  border: 0.05em solid hsla(var(--theme), 0.5);
+  border-radius: 0.25em;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1.2rem;
+  padding: 0.25em 0.5em;
+  text-align: center;
+  transition: border 300ms;
+  width: calc(100% - 1.1em);
+
+  &:focus {
+    border: 0.05em solid hsl(var(--theme-most));
+    outline: none;
+  }
+
+  &[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-inner-spin-button,
+    &:focus::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+  &[type="color"] {
+    height: 1em;
+  }
+
+  &[type="button"] {
+    align-items: center;
+    border: 0.05em solid hsla(var(--theme), 0.5);
+    border-radius: 1em;
+    box-shadow: 0 0.5em 1em 0.25em hsla(var(--theme), 0.25);
+    color: hsl(var(--fg));
+    cursor: pointer;
+    display: flex;
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    height: 2.5em;
+    justify-content: center;
+    padding: 0 1em;
+    transition: background 300ms;
+    width: auto;
+
+    &:focus,
+    &:hover {
+      background: hsl(var(--theme));
+      color: hsl(var(--fg-dark));
+      border: 0.05em solid hsl(var(--theme-most));
+    }
+  }
+
+  &.input-error {
+    border: 0.05em solid hsla(var(--error), 0.5);
+  }
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: hsl(var(--theme));
+  border: none;
+  border-radius: 0.5em;
+  box-shadow: 0 0.5em 1em 0.25em hsla(var(--theme), 0.4);
+  color: hsl(var(--fg-dark));
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.25em 0.5em;
+  text-align: center;
+
+  &:focus {
+    outline: 0.05em solid hsla(var(--fg), 0.5);
+  }
+}
+
+.checkbox {
+  position: relative;
+  height: 1em;
+  width: 1em;
+
+  & input {
+    margin: 0;
+    position: absolute;
+    left: 0;
+    z-index: 1;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+
+    &:checked ~ span {
+      background: hsl(var(--theme));
+    }
+
+    &:hover ~ span,
+    &:focus ~ span {
+      border: 0.1em solid hsl(var(--theme-most));
+    }
+  }
+
+  & span {
+    margin: 0;
+    border-radius: 1em;
+    /* z-index: -1; */
+    border: 0.1em solid hsl(var(--theme));
+    background: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.icon {
+  fill: none;
+  height: 1em;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 1em;
+}
+
+.hotkey {
+  align-items: center;
+  background: hsl(var(--hotkey));
+  border-radius: 0.25em;
+  color: hsl(var(--fg-dark));
+  display: flex;
+  justify-content: center;
+  padding: 0.2em 0.5em;
+}
+
+.error-input,
+.error-input:focus {
+  border: 0.1em solid hsla(var(--error), 0.5);
+}
