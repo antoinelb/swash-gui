@@ -48,6 +48,68 @@ body {
   width: calc(100vw - 48px);
 }
 
+/* Analysis Results Styles */
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.analysis-metrics {
+  background: var(--mantle);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.analysis-metrics h4 {
+  margin-bottom: 16px;
+  color: var(--blue);
+  font-size: 1.1em;
+}
+
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  background: var(--surface0);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-label {
+  font-size: 0.9em;
+  color: var(--subtext0);
+}
+
+.metric-value {
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.analysis-plot {
+  background: var(--mantle);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.analysis-plot h4 {
+  margin-bottom: 16px;
+  color: var(--blue);
+  font-size: 1.1em;
+}
+
+#time-series-plot {
+  background: var(--surface0);
+  border-radius: 6px;
+}
+
 /* Loading State */
 .loading {
   display: flex;

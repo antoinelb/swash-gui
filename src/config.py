@@ -58,13 +58,7 @@ class BreakwaterConfig(pydantic.BaseModel):
         default=2600, description="Density of the stones (kg/m^3)"
     )
     armour_dn50: float = pydantic.Field(
-        default=1.150, description="Median diameter of the armour stones (m)"
-    )
-    filter_dn50: float = pydantic.Field(
-        default=0.5, description="Median diameter of the filter stones (m)"
-    )
-    core_dn50: float = pydantic.Field(
-        default=0.2, description="Median diameter of the core stones (m)"
+        default=1.150, description="Median diameter of armour stones (m)"
     )
 
     _hash_config = utils.validators.hash_config()
@@ -238,8 +232,17 @@ def write_config(config: Config, path: Path) -> None:
 ############
 
 
+def _add_field_comments(config_obj, commented_map: ruamel.yaml.CommentedMap) -> None:
+    """Add comments to a CommentedMap based on Pydantic field descriptions."""
+    for field_name, field_info in config_obj.__class__.model_fields.items():
+        if field_name in commented_map and field_info.description:
+            commented_map.yaml_add_eol_comment(field_info.description, field_name)
+
+
 def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
     config_ = ruamel.yaml.CommentedMap(config.model_dump())
+    
+    # Add top-level comments
     config_.yaml_add_eol_comment(
         "hash of the config (automatically modified)", "hash"
     )
@@ -258,120 +261,22 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
         "numeric",
     )
 
-    config_["grid"] = _add_grid_comments(config.grid)
-    config_["breakwater"] = _add_breakwater_comments(config.breakwater)
-    config_["vegetation"] = _add_vegetation_comments(config.vegetation)
-    config_["water"] = _add_water_comments(config.water)
-    config_["numeric"] = _add_numeric_comments(config.numeric)
+    # Add field comments for each section using Pydantic descriptions
+    config_["grid"] = ruamel.yaml.CommentedMap(config.grid.model_dump())
+    _add_field_comments(config.grid, config_["grid"])
+    
+    config_["breakwater"] = ruamel.yaml.CommentedMap(config.breakwater.model_dump())
+    _add_field_comments(config.breakwater, config_["breakwater"])
+    
+    config_["water"] = ruamel.yaml.CommentedMap(config.water.model_dump())
+    _add_field_comments(config.water, config_["water"])
+    
+    config_["vegetation"] = ruamel.yaml.CommentedMap(config.vegetation.model_dump())
+    _add_field_comments(config.vegetation, config_["vegetation"])
+    
+    config_["numeric"] = ruamel.yaml.CommentedMap(config.numeric.model_dump())
+    _add_field_comments(config.numeric, config_["numeric"])
 
     return config_
 
 
-def _add_breakwater_comments(
-    config: BreakwaterConfig,
-) -> ruamel.yaml.CommentedMap:
-    config_ = ruamel.yaml.CommentedMap(config.model_dump())
-    config_.yaml_add_eol_comment(
-        "hash of the config (automatically modified)", "hash"
-    )
-    config_.yaml_add_eol_comment(
-        "height of the crest from the floor (m)", "crest_height"
-    )
-    config_.yaml_add_eol_comment("crest width (m)", "crest_width")
-    config_.yaml_add_eol_comment(
-        "slope of the breakwater sides (H:V ratio)", "slope"
-    )
-    config_.yaml_add_eol_comment("porosity of the breakwater (-)", "porosity")
-    config_.yaml_add_eol_comment(
-        "density of the stones (kg/m^3)", "stone_density"
-    )
-    config_.yaml_add_eol_comment(
-        "median diameter of the armour stones (m)", "armour_dn50"
-    )
-    config_.yaml_add_eol_comment(
-        "median diameter of the filter stones (m)", "filter_dn50"
-    )
-    config_.yaml_add_eol_comment(
-        "median diameter of the core stones (m)", "core_dn50"
-    )
-    return config_
-
-
-def _add_grid_comments(
-    config: ComputationalGridConfig,
-) -> ruamel.yaml.CommentedMap:
-    config_ = ruamel.yaml.CommentedMap(config.model_dump())
-    config_.yaml_add_eol_comment(
-        "hash of the config (automatically modified)", "hash"
-    )
-    config_.yaml_add_eol_comment(
-        "length of the computational domain (m)", "length"
-    )
-    config_.yaml_add_eol_comment("number of cells in x-direction", "nx_cells")
-    config_.yaml_add_eol_comment(
-        "number of vertical layers (2-3 recommended)", "n_layers"
-    )
-    return config_
-
-
-def _add_water_comments(config: WaterConfig) -> ruamel.yaml.CommentedMap:
-    config_ = ruamel.yaml.CommentedMap(config.model_dump())
-    config_.yaml_add_eol_comment(
-        "hash of the config (automatically modified)", "hash"
-    )
-    config_.yaml_add_eol_comment("still water level (m)", "water_level")
-    config_.yaml_add_eol_comment(
-        "wave height for regular waves (m)", "wave_height"
-    )
-    config_.yaml_add_eol_comment(
-        "wave period for regular waves (s)", "wave_period"
-    )
-    config_.yaml_add_eol_comment(
-        "density of the water (kg/m^3)", "water_density"
-    )
-    return config_
-
-
-def _add_vegetation_comments(
-    config: VegetationConfig,
-) -> ruamel.yaml.CommentedMap:
-    config_ = ruamel.yaml.CommentedMap(config.model_dump())
-    config_.yaml_add_eol_comment(
-        "hash of the config (automatically modified)", "hash"
-    )
-    config_.yaml_add_eol_comment(
-        "enable vegetation on the breakwater crest", "enable"
-    )
-    config_.yaml_add_eol_comment("height of plants (m)", "plant_height")
-    config_.yaml_add_eol_comment(
-        "diameter of plant stems (m)", "plant_diameter"
-    )
-    config_.yaml_add_eol_comment(
-        "number of plant stems per square meter", "plant_density"
-    )
-    config_.yaml_add_eol_comment(
-        "drag coefficient for vegetation", "drag_coefficient"
-    )
-    return config_
-
-
-def _add_numeric_comments(config: NumericConfig) -> ruamel.yaml.CommentedMap:
-    config_ = ruamel.yaml.CommentedMap(config.model_dump())
-    config_.yaml_add_eol_comment(
-        "hash of the config (automatically modified)", "hash"
-    )
-    config_.yaml_add_eol_comment("number of waves to simulate", "n_waves")
-    config_.yaml_add_eol_comment(
-        "initial time step (s) - adaptive time stepping will adjust",
-        "time_step",
-    )
-    config_.yaml_add_eol_comment(
-        "start position of the breakwater (m)", "breakwater_start_position"
-    )
-    config_.yaml_add_eol_comment(
-        "x-positions of wave gauges (m)", "wave_gauge_positions"
-    )
-    config_.yaml_add_eol_comment(
-        "time interval for output (s)", "output_interval"
-    )
-    return config_

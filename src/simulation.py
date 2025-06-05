@@ -64,7 +64,7 @@ def _create_structure_height_file(
     structure_height[breakwater_mask] = config.breakwater.crest_height
 
     # Write to file
-    output_path = simulation_dir / "structure_height.dat"
+    output_path = simulation_dir / "structure_height.txt"
     np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
@@ -81,7 +81,7 @@ def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
     bottom = np.zeros_like(x)
 
     # Write to file
-    output_path = simulation_dir / "bathymetry.dat"
+    output_path = simulation_dir / "bathymetry.txt"
     np.savetxt(output_path, bottom, fmt="%.3f")
 
 
@@ -105,7 +105,7 @@ def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
     porosity[breakwater_mask] = config.breakwater.porosity
 
     # Write to file
-    output_path = simulation_dir / "porosity.dat"
+    output_path = simulation_dir / "porosity.txt"
     np.savetxt(output_path, porosity, fmt="%.3f")
 
 
@@ -140,7 +140,7 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
         vegetation_density[crest_mask] = config.vegetation.plant_density
 
     # Write to file
-    output_path = simulation_dir / "vegetation_density.dat"
+    output_path = simulation_dir / "vegetation_density.txt"
     np.savetxt(output_path, vegetation_density, fmt="%.1f")
 
 

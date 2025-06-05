@@ -40,17 +40,17 @@ export function createConfigDetailView(configName) {
 
 <div class="config-detail">
   <div id="diagram" class="panel"></div>
+  <div id="analysis" class="panel">
+    <h3>Analysis Results</h3>
+    <p style="color: var(--subtext0); text-align: center; padding: 40px;">
+      Run simulation to see results
+    </p>
+  </div>
   <div id="config-viewer" class="panel"></div>
   <div id="animation" class="panel">
     <h3>Wave Animation</h3>
     <p style="color: var(--subtext0); text-align: center; padding: 40px;">
       Animation will be displayed here
-    </p>
-  </div>
-  <div id="analysis" class="panel">
-    <h3>Analysis Results</h3>
-    <p style="color: var(--subtext0); text-align: center; padding: 40px;">
-      Run simulation to see results
     </p>
   </div>
 </div>
@@ -92,6 +92,11 @@ export function createConfigDetailView(configName) {
       const result = await api.runSimulation(configName);
       alert(result.message);
 
+      // Load analysis results if simulation was successful
+      if (result.success) {
+        loadAnalysisResults();
+      }
+
       btn.disabled = false;
       btn.innerHTML = `${icon('play')} Run Simulation`;
     } catch (error) {
@@ -107,6 +112,94 @@ export function createConfigDetailView(configName) {
       router.push('/configs');
     } catch (error) {
       alert(`Error deleting configuration: ${error.message}`);
+    }
+  };
+
+  const loadAnalysisResults = async () => {
+    try {
+      const analysis = await api.getAnalysis(configName);
+      renderAnalysisResults(analysis);
+    } catch (error) {
+      console.error('Error loading analysis:', error);
+      document.getElementById('analysis').innerHTML = `
+        <h3>Analysis Results</h3>
+        <p style="color: var(--red); text-align: center; padding: 40px;">
+          Error loading analysis: ${error.message}
+        </p>
+      `;
+    }
+  };
+
+  const renderAnalysisResults = (analysis) => {
+    const analysisPanel = document.getElementById('analysis');
+    
+    if (analysis.error) {
+      analysisPanel.innerHTML = `
+        <h3>Analysis Results</h3>
+        <p style="color: var(--red); text-align: center; padding: 40px;">
+          ${analysis.error}
+        </p>
+      `;
+      return;
+    }
+
+    analysisPanel.innerHTML = `
+      <h3>Analysis Results</h3>
+      <div class="analysis-content">
+        <div class="analysis-metrics">
+          <h4>Wave Attenuation</h4>
+          <div class="metric-cards">
+            <div class="metric-card">
+              <span class="metric-label">Transmission Coefficient (Kt)</span>
+              <span class="metric-value">${analysis.transmission_analysis.transmission_coefficient?.toFixed(3) || 'N/A'}</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Energy Dissipation</span>
+              <span class="metric-value">${analysis.transmission_analysis.energy_dissipation_percent?.toFixed(1) || 'N/A'}%</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Incident Wave Height</span>
+              <span class="metric-value">${analysis.transmission_analysis.incident_wave_height?.toFixed(3) || 'N/A'} m</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Transmitted Wave Height</span>
+              <span class="metric-value">${analysis.transmission_analysis.transmitted_wave_height?.toFixed(3) || 'N/A'} m</span>
+            </div>
+          </div>
+        </div>
+        <div class="analysis-plot">
+          <h4>Wave Gauge Time Series</h4>
+          <div id="time-series-plot" style="width: 100%; height: 500px;"></div>
+        </div>
+      </div>
+    `;
+
+    // Render the plotly chart with Catppuccin theme
+    if (analysis.time_series_plot && window.Plotly) {
+      const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+        toImageButtonOptions: {
+          format: 'png',
+          filename: 'wave_analysis',
+          height: 500,
+          width: 1000,
+          scale: 2
+        }
+      };
+
+      // Apply additional Catppuccin theming to layout
+      const layout = {
+        ...analysis.time_series_plot.layout,
+        modebar: {
+          bgcolor: 'rgba(49, 50, 68, 0.8)',
+          color: '#cdd6f4',
+          activecolor: '#89b4fa'
+        }
+      };
+
+      window.Plotly.newPlot('time-series-plot', analysis.time_series_plot.data, layout, config);
     }
   };
 
@@ -138,6 +231,9 @@ export function createConfigDetailView(configName) {
 
       // Mount components
       mountComponents();
+
+      // Try to load analysis results if they exist
+      loadAnalysisResults();
 
       // Return cleanup function
       return () => {

@@ -60,3 +60,7 @@ export async function runSimulation(name) {
     method: 'POST',
   });
 }
+
+export async function getAnalysis(name) {
+  return await apiCall(`/analyze/${name}`);
+}
