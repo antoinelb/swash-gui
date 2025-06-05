@@ -1,6 +1,32 @@
 # SWASH Breakwater Simulation Framework
 
+[__Documentation__](#documentation)
+| [__Usage__](#quick-start)
+| [__Installation__](#installation)
+| [__Configuration__](#configuration-reference)
+| [__Données__](#données)
+| [__Modélisation__](#modélisation)
+| [__Résultats et observations__](#résultats-et-observations)
+| [__Suggestions de travaux futurs__](#suggestions-de-travaux-futurs)
+
 A Python-based framework for modeling breakwaters in wave channels and Baie-des-Bacon using [SWASH](https://swash.sourceforge.io/) (Simulating WAves till SHore). This project provides a CLI and web dashboard for configuring, running, and visualizing coastal engineering simulations.
+
+## Documentation
+
+📚 **[Complete Documentation](https://antoinelb.github.io/swash-gui/)** - Comprehensive guides covering all aspects of the framework
+
+### Quick Links
+- **[Getting Started](https://antoinelb.github.io/swash-gui/swash-overview)** - Project overview and introduction
+- **[Simulation Workflow](https://antoinelb.github.io/swash-gui/simulation-workflow)** - How to run simulations
+- **[Configuration Guide](https://antoinelb.github.io/swash-gui/configuration-guide)** - Parameter setup and management
+- **[Physics & Parameters](https://antoinelb.github.io/swash-gui/physics-and-parameters)** - Scientific foundation
+- **[Output Analysis](https://antoinelb.github.io/swash-gui/output-reference)** - Understanding results
+- **[Troubleshooting](https://antoinelb.github.io/swash-gui/troubleshooting)** - Common issues and solutions
+
+### Reference Material
+- **[INPUT File Reference](https://antoinelb.github.io/swash-gui/input-file-reference)** - SWASH input file details
+- **[Breakwater Design](https://antoinelb.github.io/swash-gui/breakwater-design)** - Physical structure details
+- **SWASH Manual**: [Complete user reference](docs/swash_manual.md)
 
 ## Features
 
@@ -159,23 +185,6 @@ Each simulation creates a directory `simulations/<name>_<hash>/` containing:
 - **structure_height.dat**: Breakwater geometry
 - **wg*.dat**: Wave gauge time series data
 - **final_state.mat**: Final simulation state
-
-## Documentation
-
-📚 **[Complete Documentation](docs/README.md)** - Comprehensive guides covering all aspects of the framework
-
-### Quick Links
-- **[Getting Started](docs/swash-overview.md)** - Project overview and introduction
-- **[Simulation Workflow](docs/simulation-workflow.md)** - How to run simulations
-- **[Configuration Guide](docs/configuration-guide.md)** - Parameter setup and management
-- **[Physics & Parameters](docs/physics-and-parameters.md)** - Scientific foundation
-- **[Output Analysis](docs/output-reference.md)** - Understanding results
-- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
-
-### Reference Material
-- **[INPUT File Reference](docs/input-file-reference.md)** - SWASH input file details
-- **[Breakwater Design](docs/breakwater-design.md)** - Physical structure details
-- **SWASH Manual**: `docs/swash_manual.md` - Complete SWASH user reference
 
 ## Troubleshooting
 

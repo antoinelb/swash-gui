@@ -1,0 +1,66 @@
+# GitHub Pages Configuration for SWASH Breakwater Framework Documentation
+
+# Site settings
+title: "SWASH Breakwater Framework"
+description: "Documentation for modeling vegetated breakwaters using SWASH"
+url: "https://antoinelb.github.io"
+baseurl: "/swash-gui"
+
+# Theme
+theme: minima
+# Alternative themes you can try:
+# theme: jekyll-theme-cayman
+# theme: jekyll-theme-minimal
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Navigation structure
+navigation:
+  - title: "Overview"
+    url: "/swash-overview"
+  - title: "Getting Started"
+    url: "/simulation-workflow"
+  - title: "Configuration"
+    url: "/configuration-guide"
+  - title: "Physics"
+    url: "/physics-and-parameters"
+  - title: "Reference"
+    url: "/input-file-reference"
+  - title: "Troubleshooting"
+    url: "/troubleshooting"
+
+# Collection settings for better organization
+collections:
+  guides:
+    output: true
+    permalink: /:name/
+
+# Exclude files from processing
+exclude:
+  - reports/
+  - swash_manual.md
+
+# Include files that start with underscore
+include:
+  - _config.yml
+
+# SEO and metadata
+author: "INRS Water Research Team"
+twitter:
+  username: # Add if applicable
+github:
+  repository_url: "https://github.com/antoinelb/swash-gui"
+
+# Enable search
+search_enabled: true

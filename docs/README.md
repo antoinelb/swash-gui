@@ -1,8 +1,12 @@
-# SWASH Breakwater Modeling Framework Documentation
+# SWASH Breakwater Modeling Framework
+
+---
 
 ## Overview
 
 This comprehensive documentation describes a framework for modeling vegetated breakwaters using SWASH (Simulating WAves till SHore). The framework provides a complete workflow from configuration management to result analysis, specifically designed for nature-based coastal protection research.
+
+> **Quick Start**: New users should begin with [SWASH Overview](swash-overview) → [Simulation Workflow](simulation-workflow) → [Configuration Guide](configuration-guide)
 
 ## Documentation Structure
 
@@ -10,13 +14,13 @@ The documentation is organized into focused guides that can be read sequentially
 
 ### 🚀 Getting Started
 
-1. **[SWASH Overview](swash-overview.md)**
+1. **[SWASH Overview](swash-overview)**
    - Introduction to SWASH and the modeling framework
    - Project context: Baie-des-Bacon breakwaters
    - Framework architecture and key features
    - **Start here** for project context and overview
 
-2. **[Breakwater Design](breakwater-design.md)**
+2. **[Breakwater Design](breakwater-design)**
    - Physical structure being modeled
    - Geometric parameters and material properties
    - Vegetation characteristics and placement
@@ -24,13 +28,13 @@ The documentation is organized into focused guides that can be read sequentially
 
 ### ⚙️ Configuration and Setup
 
-3. **[Configuration Guide](configuration-guide.md)**
+3. **[Configuration Guide](configuration-guide)**
    - Hierarchical parameter organization
    - YAML configuration management
    - Parameter validation and defaults
    - **Essential** for setting up simulations
 
-4. **[Simulation Workflow](simulation-workflow.md)**
+4. **[Simulation Workflow](simulation-workflow)**
    - Command-line interface usage
    - Step-by-step execution process
    - Batch processing and parameter studies
@@ -38,13 +42,13 @@ The documentation is organized into focused guides that can be read sequentially
 
 ### 🔧 Technical Reference
 
-5. **[INPUT File Reference](input-file-reference.md)**
+5. **[INPUT File Reference](input-file-reference)**
    - Detailed SWASH input file structure
    - Template system and Jinja2 processing
    - Hard-coded vs. configurable parameters
    - **In-depth technical** reference
 
-6. **[Physics and Parameters](physics-and-parameters.md)**
+6. **[Physics and Parameters](physics-and-parameters)**
    - Physical principles and theory
    - Parameter meanings and relationships
    - Dimensional analysis and scaling
@@ -52,13 +56,13 @@ The documentation is organized into focused guides that can be read sequentially
 
 ### 📊 Results and Analysis
 
-7. **[Output Reference](output-reference.md)**
+7. **[Output Reference](output-reference)**
    - SWASH output file formats
    - Time series and spatial data analysis
    - Data loading and visualization examples
    - **Complete guide** to interpreting results
 
-8. **[Troubleshooting](troubleshooting.md)**
+8. **[Troubleshooting](troubleshooting)**
    - Common issues and solutions
    - Diagnostic procedures
    - Performance optimization
@@ -67,28 +71,28 @@ The documentation is organized into focused guides that can be read sequentially
 ## Quick Navigation by Task
 
 ### First-Time Users
-1. Read [SWASH Overview](swash-overview.md) for context
-2. Review [Breakwater Design](breakwater-design.md) for physical understanding
-3. Follow [Simulation Workflow](simulation-workflow.md) to run your first simulation
+1. Read [SWASH Overview](swash-overview) for context
+2. Review [Breakwater Design](breakwater-design) for physical understanding
+3. Follow [Simulation Workflow](simulation-workflow) to run your first simulation
 
 ### Setting Up New Studies
-1. Use [Configuration Guide](configuration-guide.md) for parameter setup
-2. Reference [Physics and Parameters](physics-and-parameters.md) for parameter selection
-3. Apply [Simulation Workflow](simulation-workflow.md) for execution
+1. Use [Configuration Guide](configuration-guide) for parameter setup
+2. Reference [Physics and Parameters](physics-and-parameters) for parameter selection
+3. Apply [Simulation Workflow](simulation-workflow) for execution
 
 ### Understanding Results
-1. Consult [Output Reference](output-reference.md) for file formats
+1. Consult [Output Reference](output-reference) for file formats
 2. Apply analysis techniques from the output guide
-3. Use [Physics and Parameters](physics-and-parameters.md) for physical interpretation
+3. Use [Physics and Parameters](physics-and-parameters) for physical interpretation
 
 ### Solving Problems
-1. Check [Troubleshooting](troubleshooting.md) for common issues
+1. Check [Troubleshooting](troubleshooting) for common issues
 2. Reference technical guides for specific components
 3. Verify configuration using the configuration guide
 
 ### Advanced Development
-1. Study [INPUT File Reference](input-file-reference.md) for template modification
-2. Use [Physics and Parameters](physics-and-parameters.md) for new parameter implementation
+1. Study [INPUT File Reference](input-file-reference) for template modification
+2. Use [Physics and Parameters](physics-and-parameters) for new parameter implementation
 3. Reference all guides for comprehensive understanding
 
 ## Documentation Features
