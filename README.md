@@ -162,9 +162,20 @@ Each simulation creates a directory `simulations/<name>_<hash>/` containing:
 
 ## Documentation
 
+📚 **[Complete Documentation](docs/README.md)** - Comprehensive guides covering all aspects of the framework
+
+### Quick Links
+- **[Getting Started](docs/swash-overview.md)** - Project overview and introduction
+- **[Simulation Workflow](docs/simulation-workflow.md)** - How to run simulations
+- **[Configuration Guide](docs/configuration-guide.md)** - Parameter setup and management
+- **[Physics & Parameters](docs/physics-and-parameters.md)** - Scientific foundation
+- **[Output Analysis](docs/output-reference.md)** - Understanding results
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+
+### Reference Material
+- **[INPUT File Reference](docs/input-file-reference.md)** - SWASH input file details
+- **[Breakwater Design](docs/breakwater-design.md)** - Physical structure details
 - **SWASH Manual**: `docs/swash_manual.md` - Complete SWASH user reference
-- **Experimental Protocols**: `docs/` - Detailed experimental procedures
-- **Configuration Schema**: See `src/config.py` for parameter definitions
 
 ## Troubleshooting
 
