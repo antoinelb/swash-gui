@@ -1,4 +1,4 @@
-hash: b98186b0  # hash of the config (automatically modified)
+hash: 58ab2fe7  # hash of the config (automatically modified)
 grid: # computational grid configuration
   hash: f144f5d3  # hash of the config (automatically modified)
   length: 112.0 # length of the computational domain (m)
@@ -15,17 +15,17 @@ breakwater: # configuration for the breakwater
   filter_dn50: 0.5 # median diameter of the filter stones (m)
   core_dn50: 0.2 # median diameter of the core stones (m)
 water: # configuration for the water in the channel or bay
-  hash: 356913a6  # hash of the config (automatically modified)
+  hash: 04f17f4d  # hash of the config (automatically modified)
   water_level: 1.0 # still water level (m)
   water_density: 1000.0 # density of the water (kg/m³)
-  wave_height: 0.5 # wave height for regular waves (m)
+  wave_height: 0.6 # wave height for regular waves (m)
   wave_period: 6.0 # wave period for regular waves (s)
 vegetation: # configuration for the vegetation on the breakwater
-  hash: c3d40b7d  # hash of the config (automatically modified)
+  hash: b0543f52  # hash of the config (automatically modified)
   enable: true # enable vegetation on the breakwater crest
   plant_height: 0.5 # height of plants (m)
   plant_diameter: 0.01 # diameter of plant stems (m)
-  plant_density: 100.0 # number of plant stems per square meter
+  plant_density: 10.0 # number of plant stems per square meter
   drag_coefficient: 1.0 # drag coefficient for vegetation
 numeric: # configuration for the numerical parameters
   hash: 98f865f5  # hash of the config (automatically modified)
