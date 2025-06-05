@@ -103,7 +103,7 @@ export function createBreakwaterDiagram(container, configStore) {
       'stroke-width': 2
     }));
     
-    // Water level
+    // Water level (as reference line)
     const waterY = actualPlotHeight - (config.water.water_level * scale);
     g.appendChild(svg('line', {
       x1: 0,
@@ -111,8 +111,34 @@ export function createBreakwaterDiagram(container, configStore) {
       x2: fullPlotWidth,
       y2: waterY,
       stroke: 'var(--blue)',
+      'stroke-width': 1,
+      'stroke-dasharray': '3,3',
+      opacity: 0.5
+    }));
+    
+    // Add sinusoidal waves
+    const wavelength = config.water.wavelength; // Get from API
+    const waveAmplitude = (config.water.wave_height / 2) * scale;
+    const wavelengthScaled = wavelength * scale;
+    
+    // Create wave path
+    const wavePoints = [];
+    const numWavePoints = Math.ceil(fullPlotWidth / 2); // Point every 2 pixels
+    
+    for (let i = 0; i <= numWavePoints; i++) {
+      const x = (i * 2);
+      const realX = x / scale + fullDiagramStart; // Convert back to real coordinates
+      const wavePhase = (2 * Math.PI * realX) / wavelength;
+      const waveElevation = waveAmplitude * Math.sin(wavePhase);
+      const y = waterY - waveElevation;
+      wavePoints.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+    }
+    
+    g.appendChild(svg('path', {
+      d: wavePoints.join(' '),
+      stroke: 'var(--blue)',
       'stroke-width': 2,
-      'stroke-dasharray': '5,5'
+      fill: 'none'
     }));
     
     // Water level label (will be added as overlay later)
@@ -149,6 +175,7 @@ export function createBreakwaterDiagram(container, configStore) {
     }));
     
     // Vegetation on top (if enabled)
+    let topOfStructure = bwY; // Track the highest point for label positioning
     if (config.vegetation.enable) {
       const vegHeight = config.vegetation.plant_height * scale;
       const vegSpacing = 5; // pixels between plants
@@ -165,6 +192,8 @@ export function createBreakwaterDiagram(container, configStore) {
           'stroke-width': 1.5
         }));
       }
+      
+      topOfStructure = bwY - vegHeight; // Vegetation extends above breakwater
     }
     
     // Labels
@@ -176,14 +205,24 @@ export function createBreakwaterDiagram(container, configStore) {
       'font-size': '14'
     }, [`Breakwater: ${breakwaterStart.toFixed(1)}m - ${breakwaterEnd.toFixed(1)}m`]));
     
-    // Dimensions
+    // Height dimensions - position above vegetation if present
+    const heightLabelY = config.vegetation.enable ? topOfStructure - 15 : bwY - 10;
     g.appendChild(svg('text', {
       x: (bwStart + bwEnd) / 2,
-      y: bwY - 10,
+      y: heightLabelY,
       'text-anchor': 'middle',
       fill: 'var(--subtext0)',
       'font-size': '12'
     }, [`Height: ${config.breakwater.crest_height}m`]));
+    
+    // Wave parameters label
+    g.appendChild(svg('text', {
+      x: 10,
+      y: waterY - waveAmplitude - 15,
+      'text-anchor': 'start',
+      fill: 'var(--blue)',
+      'font-size': '11'
+    }, [`H=${config.water.wave_height}m, T=${config.water.wave_period}s, λ=${wavelength.toFixed(1)}m`]));
     
     // Wave gauges
     config.numeric.wave_gauge_positions.forEach((pos, i) => {

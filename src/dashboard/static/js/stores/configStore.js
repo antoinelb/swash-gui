@@ -1,5 +1,7 @@
 // Config store for managing shared configuration state
 
+import * as api from '../api.js';
+
 export function createConfigStore() {
   let config = null;
   const subscribers = new Set();
@@ -21,7 +23,7 @@ export function createConfigStore() {
       subscribers.forEach(cb => cb(config));
     },
     
-    updateConfig: (path, value) => {
+    updateConfig: async (path, value) => {
       if (!config) return;
       
       // Deep clone and update
@@ -37,6 +39,29 @@ export function createConfigStore() {
       current[finalKey] = typeof value === 'string' && !isNaN(value) 
         ? parseFloat(value) 
         : value;
+      
+      // If water parameters changed, recalculate wavelength
+      if (path.startsWith('water.') && (path.includes('wave_period') || path.includes('water_level'))) {
+        try {
+          // Create a temporary config to get updated wavelength
+          const tempConfig = { ...updated };
+          const response = await fetch('/api/wavelength', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wave_period: tempConfig.water.wave_period,
+              water_level: tempConfig.water.water_level
+            })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            updated.water.wavelength = data.wavelength;
+          }
+        } catch (error) {
+          console.warn('Failed to update wavelength:', error);
+        }
+      }
       
       config = updated;
       subscribers.forEach(cb => cb(config));

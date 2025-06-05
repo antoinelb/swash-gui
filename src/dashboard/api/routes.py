@@ -7,6 +7,7 @@ from starlette.routing import Route
 
 from src import config as config_module
 from src.simulation import run_simulation
+from src.wavelength import compute_wavelength
 
 CONFIG_DIR = Path("config")
 
@@ -42,12 +43,16 @@ async def get_config(request: Request) -> JSONResponse:
     
     try:
         cfg = config_module.read_config(config_path)
+        
+        # Calculate wavelength using dispersion relation
+        wavelength = compute_wavelength(cfg.water.wave_period, cfg.water.water_level)
+        
         return JSONResponse({
             "name": cfg.name,
             "hash": cfg.hash,
             "grid": cfg.grid.model_dump(),
             "breakwater": cfg.breakwater.model_dump(),
-            "water": cfg.water.model_dump(),
+            "water": {**cfg.water.model_dump(), "wavelength": wavelength},
             "vegetation": cfg.vegetation.model_dump(),
             "numeric": cfg.numeric.model_dump(),
         })
@@ -141,6 +146,26 @@ async def simulate_config(request: Request) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+async def calculate_wavelength(request: Request) -> JSONResponse:
+    """Calculate wavelength from wave period and water depth."""
+    try:
+        data = await request.json()
+        wave_period = data.get("wave_period")
+        water_level = data.get("water_level")
+        
+        if wave_period is None or water_level is None:
+            return JSONResponse(
+                {"error": "wave_period and water_level are required"}, 
+                status_code=400
+            )
+        
+        wavelength = compute_wavelength(wave_period, water_level)
+        
+        return JSONResponse({"wavelength": wavelength})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
 def get_api_routes() -> List[Route]:
     """Get all API routes."""
     return [
@@ -150,4 +175,5 @@ def get_api_routes() -> List[Route]:
         Route("/configs/{name}", update_config, methods=["PUT"]),
         Route("/configs/{name}", delete_config, methods=["DELETE"]),
         Route("/simulate/{name}", simulate_config, methods=["POST"]),
+        Route("/wavelength", calculate_wavelength, methods=["POST"]),
     ]
