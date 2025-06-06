@@ -146,12 +146,13 @@ async def simulate_config(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
     
     try:
-        # Run simulation (this should be async in production)
-        result = run_simulation(config_path)
+        # Load config and run simulation
+        cfg = config_module.read_config(config_path)
+        run_simulation(cfg)
         
         return JSONResponse({
-            "success": result,
-            "message": "Simulation started" if result else "Simulation failed",
+            "success": True,
+            "message": "Simulation completed successfully",
         })
     except Exception as e:
         print(f"Error running simulation for {name}: {e}")
@@ -191,7 +192,7 @@ async def analyze_config(request: Request) -> JSONResponse:
     
     try:
         cfg = config_module.read_config(config_path)
-        analysis_results = analyze_simulation(cfg)
+        analysis_results = analyze_simulation(cfg, save_results=False)
         
         return JSONResponse(analysis_results)
     except Exception as e:

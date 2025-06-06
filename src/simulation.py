@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from jinja2 import Template
 
+from .analysis import analyze_simulation
 from .config import Config
 from .utils.paths import root_dir
 from .utils.print import done_print, error_print, load_print
@@ -22,20 +23,30 @@ def run_simulation(config: Config) -> None:
     load_print(f"Running simulation {config.name}...")
     template_dir = root_dir / "templates"
     simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
-    simulation_dir.mkdir(parents=True, exist_ok=True)
+    swash_dir = simulation_dir / "swash"
+    swash_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create all necessary files
-    _create_bathymetry_file(config, simulation_dir=simulation_dir)
-    _create_porosity_file(config, simulation_dir=simulation_dir)
-    _create_structure_height_file(config, simulation_dir=simulation_dir)
+    # Create all necessary files in swash subdirectory
+    _create_bathymetry_file(config, simulation_dir=swash_dir)
+    _create_porosity_file(config, simulation_dir=swash_dir)
+    _create_structure_height_file(config, simulation_dir=swash_dir)
     if config.vegetation.enable:
-        _create_vegetation_file(config, simulation_dir=simulation_dir)
+        _create_vegetation_file(config, simulation_dir=swash_dir)
     _create_input_file(
-        config, simulation_dir=simulation_dir, template_dir=template_dir
+        config, simulation_dir=swash_dir, template_dir=template_dir
     )
 
     # Execute SWASH
-    _execute_swash(config, simulation_dir=simulation_dir)
+    success = _execute_swash(config, simulation_dir=swash_dir)
+    
+    # Run analysis if simulation succeeded
+    if success:
+        load_print("Running analysis...")
+        try:
+            analyze_simulation(config, save_results=True)
+            done_print("Analysis completed and saved")
+        except Exception as e:
+            error_print(f"Analysis failed: {e}")
 
 
 ############
@@ -179,11 +190,14 @@ def _create_input_file(
         f.write(rendered)
 
 
-def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
+def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
     """Execute SWASH simulation and handle errors.
 
     Runs SWASH in the simulation directory and checks for errors in
     the PRINT and Errfile outputs.
+    
+    Returns:
+        bool: True if simulation succeeded, False otherwise
     """
     load_print("Executing SWASH simulation...")
 
@@ -211,25 +225,29 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> None:
             )
             for msg in error_msgs:
                 error_print(f"  {msg}", indent=2)
-            return
+            return False
 
         # Check if SWASH completed successfully
         if result.returncode != 0:
             error_print(f"SWASH exited with code {result.returncode}")
             if result.stderr:
                 error_print(f"  {result.stderr.strip()}", indent=2)
-            return
+            return False
 
         done_print("SWASH simulation completed successfully")
+        return True
 
     except subprocess.TimeoutExpired:
         error_print("SWASH simulation timed out (1 hour limit)")
+        return False
     except FileNotFoundError:
         error_print(
             "SWASH executable not found. Please ensure SWASH is installed and in PATH"
         )
+        return False
     except Exception as e:
         error_print(f"Unexpected error running SWASH: {e}")
+        return False
 
 
 

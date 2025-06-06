@@ -1,11 +1,9 @@
 import json
-from pathlib import Path
 from typing import Any
 
 import numpy as np
 import polars as pl
 import plotly.graph_objects as go
-from plotly.utils import PlotlyJSONEncoder
 
 from .config import Config
 from .utils.paths import root_dir
@@ -21,11 +19,12 @@ def load_wave_gauge_data(config: Config) -> dict[str, pl.DataFrame]:
         Dictionary mapping gauge names to Polars DataFrames with columns [time, water_level, u_velocity, v_velocity]
     """
     simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
+    swash_dir = simulation_dir / "swash"
     gauge_data = {}
     
     for i, position in enumerate(config.numeric.wave_gauge_positions):
         gauge_name = f"wg{i+1:02d}"
-        gauge_file = simulation_dir / f"{gauge_name}.txt"
+        gauge_file = swash_dir / f"{gauge_name}.txt"
         
         if not gauge_file.exists():
             continue
@@ -154,8 +153,8 @@ def create_time_series_plot(config: Config, gauge_data: dict[str, pl.DataFrame])
 def calculate_transmission_coefficient(
     config: Config, 
     gauge_data: dict[str, pl.DataFrame],
-    incident_gauges: list[str] = None,
-    transmitted_gauges: list[str] = None
+    incident_gauges: list[str] | None = None,
+    transmitted_gauges: list[str] | None = None
 ) -> dict[str, float]:
     """Calculate transmission coefficient from wave gauge data.
     
@@ -186,13 +185,16 @@ def calculate_transmission_coefficient(
             
         # Use last duration_seconds of data for steady-state analysis
         max_time = df['time'].max()
+        if max_time is None:
+            return 0.0
         steady_data = df.filter(pl.col('time') >= (max_time - duration_seconds))['water_level']
         
         if len(steady_data) < 10:  # Need minimum data points
             return 0.0
             
         # Calculate RMS wave height (approximate significant wave height)
-        return 4 * steady_data.std()
+        std_val = steady_data.std()
+        return 4 * float(std_val) if std_val is not None else 0.0
     
     # Calculate incident wave height (average of incident gauges)
     incident_heights = []
@@ -230,11 +232,12 @@ def calculate_transmission_coefficient(
     }
 
 
-def analyze_simulation(config: Config) -> dict[str, Any]:
+def analyze_simulation(config: Config, save_results: bool = True) -> dict[str, Any]:
     """Complete analysis of simulation results.
     
     Args:
         config: Configuration object
+        save_results: Whether to save results to files in analysis subdirectory
         
     Returns:
         Dictionary containing all analysis results and visualizations
@@ -251,7 +254,8 @@ def analyze_simulation(config: Config) -> dict[str, Any]:
     # Calculate metrics
     transmission_results = calculate_transmission_coefficient(config, gauge_data)
     
-    return {
+    # Prepare results dictionary
+    results = {
         "config_name": config.name,
         "config_hash": config.hash,
         "gauge_positions": config.numeric.wave_gauge_positions,
@@ -265,3 +269,51 @@ def analyze_simulation(config: Config) -> dict[str, Any]:
             "data_points_per_gauge": {name: len(df) for name, df in gauge_data.items()}
         }
     }
+    
+    # Save results if requested
+    if save_results:
+        save_analysis_results(config, results)
+    
+    return results
+
+
+def save_analysis_results(config: Config, results: dict[str, Any]) -> None:
+    """Save analysis results to files in the analysis subdirectory.
+    
+    Args:
+        config: Configuration object
+        results: Analysis results dictionary from analyze_simulation()
+    """
+    # Create analysis directory
+    simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
+    analysis_dir = simulation_dir / "analysis"
+    analysis_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save metrics as JSON (excluding the plot data)
+    metrics = {
+        "config_name": results["config_name"],
+        "config_hash": results["config_hash"],
+        "gauge_positions": results["gauge_positions"],
+        "breakwater_position": results["breakwater_position"],
+        "transmission_analysis": results["transmission_analysis"],
+        "data_summary": results["data_summary"]
+    }
+    
+    metrics_file = analysis_dir / "metrics.json"
+    with open(metrics_file, "w") as f:
+        json.dump(metrics, f, indent=2)
+    
+    # Save time series plot as PNG
+    if "time_series_plot" in results and results["time_series_plot"]:
+        try:
+            # Reconstruct the Plotly figure from JSON
+            fig = go.Figure(results["time_series_plot"])
+            
+            # Save as PNG (requires kaleido package)
+            plot_file = analysis_dir / "time_series_plot.png"
+            fig.write_image(str(plot_file), width=1200, height=600, scale=2)
+        except Exception:
+            # If kaleido is not installed, save as HTML instead
+            plot_file = analysis_dir / "time_series_plot.html"
+            fig = go.Figure(results["time_series_plot"])
+            fig.write_html(str(plot_file), include_plotlyjs="cdn")
