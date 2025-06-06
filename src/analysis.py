@@ -41,9 +41,11 @@ def load_wave_gauge_data(config: Config) -> dict[str, pl.DataFrame]:
             time = np.arange(n_timesteps) * config.numeric.output_interval
             
             # Create Polars DataFrame
+            # Convert relative water level to absolute by adding still water level
+            absolute_water_level = data[:, 0] + config.water.water_level
             df = pl.DataFrame({
                 'time': time,
-                'water_level': data[:, 0],
+                'water_level': absolute_water_level,
                 'u_velocity': data[:, 1],
                 'v_velocity': data[:, 2],
                 'position': position
@@ -86,7 +88,7 @@ def create_time_series_plot(config: Config, gauge_data: dict[str, pl.DataFrame])
             hovertemplate=(
                 f'<b>{gauge_name.upper()}</b><br>'
                 'Time: %{x:.2f}s<br>'
-                'Water Level: %{y:.3f}m<br>'
+                'Absolute Water Level: %{y:.3f}m<br>'
                 f'Position: {position:.1f}m'
                 '<extra></extra>'
             )
@@ -104,7 +106,7 @@ def create_time_series_plot(config: Config, gauge_data: dict[str, pl.DataFrame])
             'font': {'color': '#cdd6f4', 'size': 16}
         },
         xaxis_title='Time (s)',
-        yaxis_title='Water Level (m)',
+        yaxis_title='Absolute Water Level (m)',
         hovermode='x unified',
         showlegend=True,
         height=500,

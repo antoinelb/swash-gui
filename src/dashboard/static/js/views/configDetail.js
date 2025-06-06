@@ -47,12 +47,6 @@ export function createConfigDetailView(configName) {
     </p>
   </div>
   <div id="config-viewer" class="panel"></div>
-  <div id="animation" class="panel">
-    <h3>Wave Animation</h3>
-    <p style="color: var(--subtext0); text-align: center; padding: 40px;">
-      Animation will be displayed here
-    </p>
-  </div>
 </div>
 `;
 
