@@ -1,7 +1,12 @@
+import re
 import subprocess
+import threading
+import time
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
+import tqdm
 from jinja2 import Template
 
 from .analysis import analyze_simulation
@@ -28,17 +33,16 @@ def run_simulation(config: Config) -> None:
 
     # Create all necessary files in swash subdirectory
     _create_bathymetry_file(config, simulation_dir=swash_dir)
-    _create_porosity_file(config, simulation_dir=swash_dir)
-    _create_structure_height_file(config, simulation_dir=swash_dir)
+    if config.breakwater.enable:
+        _create_porosity_file(config, simulation_dir=swash_dir)
+        _create_structure_height_file(config, simulation_dir=swash_dir)
     if config.vegetation.enable:
         _create_vegetation_file(config, simulation_dir=swash_dir)
-    _create_input_file(
-        config, simulation_dir=swash_dir, template_dir=template_dir
-    )
+    _create_input_file(config, simulation_dir=swash_dir, template_dir=template_dir)
 
     # Execute SWASH
     success = _execute_swash(config, simulation_dir=swash_dir)
-    
+
     # Run analysis if simulation succeeded
     if success:
         load_print("Running analysis...")
@@ -54,9 +58,7 @@ def run_simulation(config: Config) -> None:
 ############
 
 
-def _create_structure_height_file(
-    config: Config, *, simulation_dir: Path
-) -> None:
+def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> None:
     """Create structure height file for the breakwater.
 
     The structure height file contains the height of the porous structure
@@ -124,8 +126,9 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     """Create vegetation density file.
 
     The vegetation file contains the number of plant stems per unit area
-    at each grid point. Vegetation is placed only on the breakwater crest
-    where the structure height equals the crest height.
+    at each grid point. Vegetation is placed only on the breakwater crest.
+    For two vegetation types, the spatial distribution is handled via the
+    density file based on the distribution pattern.
     """
     # Create grid points
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
@@ -133,22 +136,57 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     # Initialize vegetation density array
     vegetation_density = np.zeros_like(x)
 
-    if config.vegetation.enable:
+    if config.vegetation.enable and config.breakwater.enable:
         # Calculate breakwater geometry to find crest locations
         breakwater_start = config.numeric.breakwater_start_position
         breakwater_end = config.breakwater_end_position
         crest_height = config.breakwater.crest_height
         slope = config.breakwater.slope
-        
+
         # Calculate crest start and end positions
         # Slope distance from base to crest: height * slope
         slope_distance = crest_height * slope
         crest_start = breakwater_start + slope_distance
         crest_end = breakwater_end - slope_distance
-        
-        # Set vegetation density only on the flat crest area
+
+        # Get crest mask
         crest_mask = (x >= crest_start) & (x <= crest_end)
-        vegetation_density[crest_mask] = config.vegetation.plant_density
+        crest_indices = np.where(crest_mask)[0]
+
+        if len(crest_indices) > 0 and config.vegetation.other_type is not None:
+            # Two vegetation types with spatial distribution
+            n_crest_points = len(crest_indices)
+            other_type = config.vegetation.other_type  # Type assertion for type checker
+
+            if config.vegetation.distribution == "half":
+                # Split crest into two halves
+                split_idx = int(n_crest_points * config.vegetation.type_fraction)
+                # Type 1 on seaward side, Type 2 on leeward side
+                for i, idx in enumerate(crest_indices):
+                    if i < split_idx:
+                        vegetation_density[idx] = config.vegetation.type.plant_density
+                    else:
+                        vegetation_density[idx] = other_type.plant_density
+
+            elif config.vegetation.distribution == "alternating":
+                # Alternate between types
+                for i, idx in enumerate(crest_indices):
+                    if i % 2 == 0:
+                        vegetation_density[idx] = config.vegetation.type.plant_density
+                    else:
+                        vegetation_density[idx] = other_type.plant_density
+
+            elif config.vegetation.distribution == "custom":
+                # For custom distribution, use type_fraction as a probability
+                # This could be extended to read from a file in the future
+                for idx in crest_indices:
+                    if np.random.random() < config.vegetation.type_fraction:
+                        vegetation_density[idx] = config.vegetation.type.plant_density
+                    else:
+                        vegetation_density[idx] = other_type.plant_density
+        else:
+            # Single vegetation type
+            vegetation_density[crest_mask] = config.vegetation.type.plant_density
 
     # Write to file
     output_path = simulation_dir / "vegetation_density.txt"
@@ -170,8 +208,12 @@ def _create_input_file(
     template = Template(template_content)
 
     # Prepare template variables
+    # Generate a short project number from the hash (first 3 chars)
+    project_nr = config.hash[:3] if config.hash else "001"
+
     template_vars = {
         "name": config.name,
+        "project_nr": project_nr,
         "grid": config.grid,
         "breakwater": config.breakwater,
         "water": config.water,
@@ -191,11 +233,11 @@ def _create_input_file(
 
 
 def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
-    """Execute SWASH simulation and handle errors.
+    """Execute SWASH simulation with progress monitoring.
 
-    Runs SWASH in the simulation directory and checks for errors in
-    the PRINT and Errfile outputs.
-    
+    Runs SWASH in the simulation directory and shows progress based on
+    simulation time advancement.
+
     Returns:
         bool: True if simulation succeeded, False otherwise
     """
@@ -206,32 +248,108 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
     if errfile_path.exists():
         errfile_path.unlink()
 
+    # Calculate total simulation duration for progress tracking
+    total_duration = config.simulation_duration
+
     try:
-        # Run SWASH in the simulation directory
-        result = subprocess.run(
+        # Start SWASH process with real-time output
+        process = subprocess.Popen(
             ["swash"],
             cwd=simulation_dir,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=3600,  # 1 hour timeout
+            bufsize=1,  # Line buffered
+            universal_newlines=True,
         )
+
+        # Progress tracking variables
+        current_time: float = 0.0
+        progress_bar: Optional[tqdm.tqdm] = None
+
+        # Monitor SWASH output for progress
+        def monitor_progress():
+            nonlocal current_time, progress_bar
+
+            # Create progress bar
+            progress_bar = tqdm.tqdm(
+                total=int(
+                    total_duration * 100
+                ),  # Use centiseconds for finer resolution
+                desc="[*] SWASH Progress",
+                unit="cs",
+                unit_scale=False,
+                bar_format="{l_bar}{bar}| {n}/{total} steps [{elapsed}<{remaining}]",
+                leave=False,
+                position=0,
+                dynamic_ncols=True,
+            )
+
+            # Pattern to match SWASH time output
+            time_pattern = re.compile(
+                r"Time of simulation\s*->\s*(\d+\.\d+)\s*in sec:\s*(\d+\.\d+)"
+            )
+
+            print_path = simulation_dir / "PRINT"
+            last_position = 0
+
+            while process.poll() is None:
+                if print_path.exists():
+                    try:
+                        with open(print_path, "r") as f:
+                            f.seek(last_position)
+                            new_content = f.read()
+                            last_position = f.tell()
+
+                            # Look for time progress in new content
+                            for match in time_pattern.finditer(new_content):
+                                sim_time = float(match.group(2))
+                                if sim_time > current_time:
+                                    current_time = sim_time
+                                    # Update progress bar (convert to centiseconds)
+                                    if progress_bar is not None:
+                                        progress_bar.n = int(current_time * 100)
+                                        progress_bar.refresh()
+                    except (IOError, ValueError):
+                        pass
+
+                time.sleep(0.1)  # Check every 100ms
+
+            # Complete the progress bar
+            if progress_bar:
+                progress_bar.n = progress_bar.total
+                progress_bar.refresh()
+                progress_bar.close()
+
+        # Start monitoring thread
+        monitor_thread = threading.Thread(target=monitor_progress, daemon=True)
+        monitor_thread.start()
+
+        # Wait for process to complete
+        stdout, stderr = process.communicate(timeout=3600)  # 1 hour timeout
+
+        # Wait for monitoring thread to finish
+        monitor_thread.join(timeout=2.0)
+
+        # Ensure progress bar is properly closed and cursor returns to new line
+        if progress_bar:
+            progress_bar.close()
+        print()  # Add newline after progress bar
 
         # Check for errors in output files
         error_msgs = _check_swash_errors(simulation_dir)
 
         if error_msgs:
-            error_print(
-                f"SWASH simulation failed with {len(error_msgs)} error(s)"
-            )
+            error_print(f"SWASH simulation failed with {len(error_msgs)} error(s)")
             for msg in error_msgs:
                 error_print(f"  {msg}", indent=2)
             return False
 
         # Check if SWASH completed successfully
-        if result.returncode != 0:
-            error_print(f"SWASH exited with code {result.returncode}")
-            if result.stderr:
-                error_print(f"  {result.stderr.strip()}", indent=2)
+        if process.returncode != 0:
+            error_print(f"SWASH exited with code {process.returncode}")
+            if stderr:
+                error_print(f"  {stderr.strip()}", indent=2)
             return False
 
         done_print("SWASH simulation completed successfully")
@@ -239,6 +357,8 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
 
     except subprocess.TimeoutExpired:
         error_print("SWASH simulation timed out (1 hour limit)")
+        if process:
+            process.kill()
         return False
     except FileNotFoundError:
         error_print(
@@ -248,7 +368,6 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
     except Exception as e:
         error_print(f"Unexpected error running SWASH: {e}")
         return False
-
 
 
 def _check_swash_errors(simulation_dir: Path) -> list[str]:

@@ -78,6 +78,7 @@ Simulations create directories with format: `simulations/<name>_<hash>/`
 - User manual: `docs/swash_manual.md`
 - Input templates use Jinja2 syntax for variable substitution
 - The framework handles SWASH execution and output parsing
+- IMPORTANT: First refer to `@docs/swash_manual/swash_1d_config_summary.md` when working with swash
 
 ### Project Documentation
 - `docs/swash_manual.md`: SWASH user manual for reference
@@ -89,3 +90,28 @@ Simulations create directories with format: `simulations/<name>_<hash>/`
 
 ### File Format Notes
 - Files ending with .dat are text files and not binary ones
+
+### Running the Program
+To run the program, use the following steps:
+
+1. Ensure all dependencies are installed:
+```bash
+uv sync
+```
+
+2. Create a configuration file for your experiment:
+```bash
+cli create config/my_experiment.yml
+```
+
+3. Run the simulation using the created configuration:
+```bash
+cli run config/my_experiment.yml
+```
+
+4. Optional: Launch the interactive dashboard to visualize results:
+```bash
+cli dashboard
+```
+
+Note: Use the shorthand `c` instead of `cli` for quicker command entry (e.g., `c run config/my_experiment.yml`).

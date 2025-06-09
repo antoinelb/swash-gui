@@ -8,23 +8,33 @@ export function createBreakwaterDiagram(container, configStore) {
   const render = (config) => {
     if (!config) return;
     
+    // Check if breakwater is enabled
+    const breakwaterEnabled = config.breakwater?.enable !== false;
+    
     // Validate required numeric values before proceeding
-    const requiredValues = [
-      config.numeric?.breakwater_start_position,
-      config.breakwater?.crest_height,
-      config.breakwater?.crest_width,
-      config.breakwater?.slope,
+    const baseRequiredValues = [
       config.water?.water_level,
       config.water?.wave_height,
       config.water?.wave_period
     ];
     
+    const breakwaterRequiredValues = breakwaterEnabled ? [
+      config.numeric?.breakwater_start_position,
+      config.breakwater?.crest_height,
+      config.breakwater?.crest_width,
+      config.breakwater?.slope
+    ] : [];
+    
+    const requiredValues = [...baseRequiredValues, ...breakwaterRequiredValues];
+    
     if (requiredValues.some(val => val === undefined || val === null || val === '' || isNaN(val))) {
-      container.innerHTML = '<h3>Breakwater Cross-Section</h3><p style="color: var(--subtext0); padding: 20px;">Complete the configuration to see the diagram</p>';
+      const diagramTitle = breakwaterEnabled ? 'Breakwater Cross-Section' : 'Wave Channel Cross-Section';
+      container.innerHTML = `<h3>${diagramTitle}</h3><p style="color: var(--subtext0); padding: 20px;">Complete the configuration to see the diagram</p>`;
       return;
     }
     
-    container.innerHTML = '<h3>Breakwater Cross-Section</h3>';
+    const diagramTitle = breakwaterEnabled ? 'Breakwater Cross-Section' : 'Wave Channel Cross-Section';
+    container.innerHTML = `<h3>${diagramTitle}</h3>`;
     
     // SVG dimensions and margins
     const margin = { top: 20, right: 20, bottom: 40, left: 40 };
@@ -46,24 +56,39 @@ export function createBreakwaterDiagram(container, configStore) {
     svgContainer.style.position = 'relative';
     svgContainer.style.boxSizing = 'border-box';
     
-    // Calculate breakwater dimensions
-    const breakwaterStart = config.numeric.breakwater_start_position;
-    const breakwaterHeight = config.breakwater.crest_height;
-    const breakwaterSlope = config.breakwater.slope;
-    const creastWidth = config.breakwater.crest_width;
+    // Calculate domain dimensions
+    let breakwaterStart, breakwaterHeight, breakwaterSlope, creastWidth, baseWidth, breakwaterEnd;
+    let fullDiagramStart, fullDiagramEnd, visibleStart, visibleEnd;
     
-    // Bottom width = crest width + 2 * (height * slope)
-    const baseWidth = creastWidth + 2 * (breakwaterHeight * breakwaterSlope);
-    const breakwaterEnd = breakwaterStart + baseWidth;
+    if (breakwaterEnabled) {
+      // Calculate breakwater dimensions
+      breakwaterStart = config.numeric.breakwater_start_position;
+      breakwaterHeight = config.breakwater.crest_height;
+      breakwaterSlope = config.breakwater.slope;
+      creastWidth = config.breakwater.crest_width;
+      
+      // Bottom width = crest width + 2 * (height * slope)
+      baseWidth = creastWidth + 2 * (breakwaterHeight * breakwaterSlope);
+      breakwaterEnd = breakwaterStart + baseWidth;
+      
+      // Calculate full domain bounds for scrolling - start from 0m
+      fullDiagramStart = 0;
+      fullDiagramEnd = breakwaterEnd + 10;
+      
+      // Calculate visible bounds: 5m on each side of breakwater
+      visibleStart = Math.max(0, breakwaterStart - 5);
+      visibleEnd = breakwaterEnd + 5;
+    } else {
+      // No breakwater - show a reasonable domain for wave channel
+      fullDiagramStart = 0;
+      fullDiagramEnd = 50; // 50m domain for wave channel
+      
+      // Show central portion by default
+      visibleStart = 0;
+      visibleEnd = 50;
+    }
     
-    // Calculate full domain bounds for scrolling - start from 0m
-    const fullDiagramStart = 0;
-    const fullDiagramEnd = breakwaterEnd + 10;
     const fullDiagramLength = fullDiagramEnd - fullDiagramStart;
-    
-    // Calculate visible bounds: 5m on each side of breakwater
-    const visibleStart = Math.max(0, breakwaterStart - 5);
-    const visibleEnd = breakwaterEnd + 5;
     const visibleLength = visibleEnd - visibleStart;
     
     // Use same scale for both axes to maintain correct proportions
@@ -161,77 +186,129 @@ export function createBreakwaterDiagram(container, configStore) {
     
     // Water level label (will be added as overlay later)
     
-    // Breakwater
-    const bwStart = (breakwaterStart - fullDiagramStart) * scale;
-    const bwEnd = (breakwaterEnd - fullDiagramStart) * scale;
-    const bwWidth = bwEnd - bwStart;
-    const bwHeight = config.breakwater.crest_height * scale;
-    const bwY = actualPlotHeight - bwHeight;
+    // Breakwater (only if enabled)
+    let topOfStructure = actualPlotHeight; // Track the highest point for label positioning
+    if (breakwaterEnabled) {
+      const bwStart = (breakwaterStart - fullDiagramStart) * scale;
+      const bwEnd = (breakwaterEnd - fullDiagramStart) * scale;
+      const bwWidth = bwEnd - bwStart;
+      const bwHeight = config.breakwater.crest_height * scale;
+      const bwY = actualPlotHeight - bwHeight;
     
-    // Breakwater core (trapezoid)
-    // Slope offset in screen coordinates
-    const slopeOffset = (breakwaterHeight * breakwaterSlope) * scale;
-    const crestWidthScaled = creastWidth * scale;
-    
-    // Calculate trapezoid points
-    const crestStart = bwStart + slopeOffset;
-    const crestEnd = crestStart + crestWidthScaled;
-    
-    const breakwaterPath = [
-      `M ${bwStart} ${actualPlotHeight}`,  // Bottom left
-      `L ${crestStart} ${bwY}`,            // Top left
-      `L ${crestEnd} ${bwY}`,              // Top right  
-      `L ${bwEnd} ${actualPlotHeight}`,    // Bottom right
-      `Z`
-    ].join(' ');
-    
-    g.appendChild(svg('path', {
-      d: breakwaterPath,
-      fill: 'var(--surface1)',
-      stroke: 'var(--surface2)',
-      'stroke-width': 2
-    }));
-    
-    // Vegetation on top (if enabled)
-    let topOfStructure = bwY; // Track the highest point for label positioning
-    if (config.vegetation.enable) {
-      const vegHeight = config.vegetation.plant_height * scale;
-      const vegSpacing = 5; // pixels between plants
-      const numPlants = Math.floor(crestWidthScaled / vegSpacing);
+      // Breakwater core (trapezoid)
+      // Slope offset in screen coordinates
+      const slopeOffset = (breakwaterHeight * breakwaterSlope) * scale;
+      const crestWidthScaled = creastWidth * scale;
       
-      for (let i = 0; i < numPlants; i++) {
-        const x = crestStart + i * vegSpacing;
-        g.appendChild(svg('line', {
-          x1: x,
-          y1: bwY,
-          x2: x,
-          y2: bwY - vegHeight,
-          stroke: 'var(--green)',
-          'stroke-width': 1.5
-        }));
-      }
+      // Calculate trapezoid points
+      const crestStart = bwStart + slopeOffset;
+      const crestEnd = crestStart + crestWidthScaled;
       
-      topOfStructure = bwY - vegHeight; // Vegetation extends above breakwater
-    }
-    
-    // Labels
-    g.appendChild(svg('text', {
-      x: (bwStart + bwEnd) / 2,
-      y: actualPlotHeight + 20,
-      'text-anchor': 'middle',
-      fill: 'var(--text)',
-      'font-size': '14'
-    }, [`Breakwater: ${breakwaterStart.toFixed(1)}m - ${breakwaterEnd.toFixed(1)}m`]));
-    
-    // Height dimensions - position above vegetation if present
-    const heightLabelY = config.vegetation.enable ? topOfStructure - 15 : bwY - 10;
-    g.appendChild(svg('text', {
-      x: (bwStart + bwEnd) / 2,
-      y: heightLabelY,
-      'text-anchor': 'middle',
-      fill: 'var(--subtext0)',
-      'font-size': '12'
-    }, [`Height: ${config.breakwater.crest_height}m`]));
+      const breakwaterPath = [
+        `M ${bwStart} ${actualPlotHeight}`,  // Bottom left
+        `L ${crestStart} ${bwY}`,            // Top left
+        `L ${crestEnd} ${bwY}`,              // Top right  
+        `L ${bwEnd} ${actualPlotHeight}`,    // Bottom right
+        `Z`
+      ].join(' ');
+      
+      g.appendChild(svg('path', {
+        d: breakwaterPath,
+        fill: 'var(--surface1)',
+        stroke: 'var(--surface2)',
+        'stroke-width': 2
+      }));
+      
+      // Vegetation on top (if enabled)
+      topOfStructure = bwY; // Track the highest point for label positioning
+        if (config.vegetation.enable && config.breakwater.enable) {
+          const vegSpacing = 5; // pixels between plants
+          const numPlants = Math.floor(crestWidthScaled / vegSpacing);
+          
+          // Check if we have two vegetation types
+          const hasSecondType = config.vegetation.other_type && 
+                               config.vegetation.other_type.plant_height && 
+                               config.vegetation.other_type.plant_diameter;
+          
+          if (hasSecondType) {
+            // Two vegetation types
+            const type1Height = config.vegetation.type.plant_height * scale;
+            const type2Height = config.vegetation.other_type.plant_height * scale;
+            const maxVegHeight = Math.max(type1Height, type2Height);
+            
+            // Determine distribution
+            const distribution = config.vegetation.distribution || 'half';
+            const typeFraction = config.vegetation.type_fraction || 0.5;
+            
+            for (let i = 0; i < numPlants; i++) {
+              const x = crestStart + i * vegSpacing;
+              let isType1 = true;
+              
+              // Determine which type based on distribution
+              if (distribution === 'half') {
+                isType1 = i < numPlants * typeFraction;
+              } else if (distribution === 'alternating') {
+                isType1 = i % 2 === 0;
+              } else if (distribution === 'custom') {
+                isType1 = Math.random() < typeFraction;
+              }
+              
+              const vegHeight = isType1 ? type1Height : type2Height;
+              const vegColor = isType1 ? '#40a02b' : '#179299'; // Darker green for type 1, teal for type 2
+              const strokeWidth = isType1 ? 2 : 1; // Thicker for shrubs, thinner for grasses
+              
+              g.appendChild(svg('line', {
+                x1: x,
+                y1: bwY,
+                x2: x,
+                y2: bwY - vegHeight,
+                stroke: vegColor,
+                'stroke-width': strokeWidth
+              }));
+            }
+            
+            topOfStructure = bwY - maxVegHeight;
+          } else {
+            // Single vegetation type (backward compatibility)
+            const vegHeight = config.vegetation.type?.plant_height 
+                             ? config.vegetation.type.plant_height * scale 
+                             : config.vegetation.plant_height * scale;
+            
+            for (let i = 0; i < numPlants; i++) {
+              const x = crestStart + i * vegSpacing;
+              g.appendChild(svg('line', {
+                x1: x,
+                y1: bwY,
+                x2: x,
+                y2: bwY - vegHeight,
+                stroke: 'var(--green)',
+                'stroke-width': 1.5
+              }));
+            }
+            
+            topOfStructure = bwY - vegHeight;
+          }
+        }
+        
+        // Breakwater labels
+        g.appendChild(svg('text', {
+          x: (bwStart + bwEnd) / 2,
+          y: actualPlotHeight + 20,
+          'text-anchor': 'middle',
+          fill: 'var(--text)',
+          'font-size': '14'
+        }, [`Breakwater: ${breakwaterStart.toFixed(1)}m - ${breakwaterEnd.toFixed(1)}m`]));
+        
+        // Height dimensions - position above vegetation if present
+        const heightLabelY = config.vegetation.enable ? topOfStructure - 15 : bwY - 10;
+        g.appendChild(svg('text', {
+          x: (bwStart + bwEnd) / 2,
+          y: heightLabelY,
+          'text-anchor': 'middle',
+          fill: 'var(--subtext0)',
+          'font-size': '12'
+        }, [`Height: ${config.breakwater.crest_height}m`]));
+      } // End of breakwater conditional
     
     // Wave parameters label
     if (wavelength && !isNaN(wavelength) && wavelength > 0) {
@@ -243,6 +320,47 @@ export function createBreakwaterDiagram(container, configStore) {
         fill: 'var(--blue)',
         'font-size': '11'
       }, [`H=${config.water.wave_height}m, T=${config.water.wave_period}s, λ=${wavelength.toFixed(1)}m`]));
+    }
+    
+    // Vegetation legend (if two types and breakwater enabled)
+    if (breakwaterEnabled && config.vegetation.enable && config.vegetation.other_type && 
+        config.vegetation.other_type.plant_height && config.vegetation.other_type.plant_diameter) {
+      const legendX = fullPlotWidth - 150;
+      const legendY = 20;
+      
+      // Type 1 legend
+      g.appendChild(svg('line', {
+        x1: legendX,
+        y1: legendY,
+        x2: legendX + 15,
+        y2: legendY,
+        stroke: '#40a02b',
+        'stroke-width': 2
+      }));
+      g.appendChild(svg('text', {
+        x: legendX + 20,
+        y: legendY,
+        'dominant-baseline': 'middle',
+        fill: 'var(--subtext0)',
+        'font-size': '11'
+      }, [`Type 1: ${config.vegetation.type.plant_density}/m²`]));
+      
+      // Type 2 legend
+      g.appendChild(svg('line', {
+        x1: legendX,
+        y1: legendY + 20,
+        x2: legendX + 15,
+        y2: legendY + 20,
+        stroke: '#179299',
+        'stroke-width': 1
+      }));
+      g.appendChild(svg('text', {
+        x: legendX + 20,
+        y: legendY + 20,
+        'dominant-baseline': 'middle',
+        fill: 'var(--subtext0)',
+        'font-size': '11'
+      }, [`Type 2: ${config.vegetation.other_type.plant_density}/m²`]));
     }
     
     // Wave gauges

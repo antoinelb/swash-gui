@@ -29,11 +29,7 @@ def hash_config(ignore: list[str] = []) -> Callable[..., Any]:
 
     def fct_(model: pydantic.BaseModel) -> pydantic.BaseModel:
         model.hash = _hash_config(  # type: ignore
-            {
-                key: val
-                for key, val in model.model_dump().items()
-                if key not in ignore
-            },
+            {key: val for key, val in model.model_dump().items() if key not in ignore},
             model.hash,  # type: ignore
         )
         return model

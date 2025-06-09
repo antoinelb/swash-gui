@@ -109,10 +109,24 @@ export function createConfigViewer(container, configStore, editable = false) {
   <section>
     <h3>Vegetation</h3>
     ${createCheckbox('Enable Vegetation', config.vegetation.enable, 'vegetation.enable')}
-    ${createField('Plant Height (m)', config.vegetation.plant_height, 'vegetation.plant_height')}
-    ${createField('Plant Diameter (m)', config.vegetation.plant_diameter, 'vegetation.plant_diameter')}
-    ${createField('Plant Density (/m²)', config.vegetation.plant_density, 'vegetation.plant_density')}
-    ${createField('Drag Coefficient', config.vegetation.drag_coefficient, 'vegetation.drag_coefficient')}
+    
+    <h4>Primary Type</h4>
+    ${createField('Plant Height (m)', config.vegetation.type?.plant_height || config.vegetation.plant_height || 0, 'vegetation.type.plant_height')}
+    ${createField('Plant Diameter (m)', config.vegetation.type?.plant_diameter || config.vegetation.plant_diameter || 0, 'vegetation.type.plant_diameter')}
+    ${createField('Plant Density (/m²)', config.vegetation.type?.plant_density || config.vegetation.plant_density || 0, 'vegetation.type.plant_density')}
+    ${createField('Drag Coefficient', config.vegetation.type?.drag_coefficient || config.vegetation.drag_coefficient || 0, 'vegetation.type.drag_coefficient')}
+    
+    ${config.vegetation.other_type ? `
+    <h4>Secondary Type</h4>
+    ${createField('Plant Height (m)', config.vegetation.other_type.plant_height, 'vegetation.other_type.plant_height')}
+    ${createField('Plant Diameter (m)', config.vegetation.other_type.plant_diameter, 'vegetation.other_type.plant_diameter')}
+    ${createField('Plant Density (/m²)', config.vegetation.other_type.plant_density, 'vegetation.other_type.plant_density')}
+    ${createField('Drag Coefficient', config.vegetation.other_type.drag_coefficient, 'vegetation.other_type.drag_coefficient')}
+    
+    <h4>Distribution</h4>
+    ${createField('Distribution Pattern', config.vegetation.distribution, 'vegetation.distribution', 'text')}
+    ${createField('Primary Type Fraction', config.vegetation.type_fraction, 'vegetation.type_fraction')}
+    ` : ''}
   </section>
 
   <section>
@@ -175,10 +189,22 @@ export function createConfigViewer(container, configStore, editable = false) {
     updateField('water.wave_period', config.water.wave_period);
 
     updateField('vegetation.enable', config.vegetation.enable);
-    updateField('vegetation.plant_height', config.vegetation.plant_height);
-    updateField('vegetation.plant_diameter', config.vegetation.plant_diameter);
-    updateField('vegetation.plant_density', config.vegetation.plant_density);
-    updateField('vegetation.drag_coefficient', config.vegetation.drag_coefficient);
+    
+    // Primary vegetation type (backward compatibility)
+    updateField('vegetation.type.plant_height', config.vegetation.type?.plant_height || config.vegetation.plant_height);
+    updateField('vegetation.type.plant_diameter', config.vegetation.type?.plant_diameter || config.vegetation.plant_diameter);
+    updateField('vegetation.type.plant_density', config.vegetation.type?.plant_density || config.vegetation.plant_density);
+    updateField('vegetation.type.drag_coefficient', config.vegetation.type?.drag_coefficient || config.vegetation.drag_coefficient);
+    
+    // Secondary vegetation type
+    if (config.vegetation.other_type) {
+      updateField('vegetation.other_type.plant_height', config.vegetation.other_type.plant_height);
+      updateField('vegetation.other_type.plant_diameter', config.vegetation.other_type.plant_diameter);
+      updateField('vegetation.other_type.plant_density', config.vegetation.other_type.plant_density);
+      updateField('vegetation.other_type.drag_coefficient', config.vegetation.other_type.drag_coefficient);
+      updateField('vegetation.distribution', config.vegetation.distribution);
+      updateField('vegetation.type_fraction', config.vegetation.type_fraction);
+    }
 
     updateField('numeric.n_waves', config.numeric.n_waves);
     updateField('numeric.time_step', config.numeric.time_step);

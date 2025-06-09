@@ -18,21 +18,23 @@ async def list_configs(request: Request) -> JSONResponse:
     """List all available configurations."""
     if not CONFIG_DIR.exists():
         return JSONResponse({"configs": []})
-    
+
     configs = []
     for yaml_file in CONFIG_DIR.glob("*.yml"):
         try:
             cfg = config_module.read_config(yaml_file)
-            configs.append({
-                "name": cfg.name,
-                "path": str(yaml_file),
-                "hash": cfg.hash[:8],
-            })
+            configs.append(
+                {
+                    "name": cfg.name,
+                    "path": str(yaml_file),
+                    "hash": cfg.hash[:8],
+                }
+            )
         except Exception as e:
             # Skip invalid configs but log the error
             print(f"Error loading config {yaml_file}: {e}")
             continue
-    
+
     return JSONResponse({"configs": sorted(configs, key=lambda x: x["name"])})
 
 
@@ -40,25 +42,27 @@ async def get_config(request: Request) -> JSONResponse:
     """Get a specific configuration by name."""
     name = request.path_params["name"]
     config_path = CONFIG_DIR / f"{name}.yml"
-    
+
     if not config_path.exists():
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
-    
+
     try:
         cfg = config_module.read_config(config_path)
-        
+
         # Calculate wavelength using dispersion relation
         wavelength = compute_wavelength(cfg.water.wave_period, cfg.water.water_level)
-        
-        return JSONResponse({
-            "name": cfg.name,
-            "hash": cfg.hash,
-            "grid": cfg.grid.model_dump(),
-            "breakwater": cfg.breakwater.model_dump(),
-            "water": {**cfg.water.model_dump(), "wavelength": wavelength},
-            "vegetation": cfg.vegetation.model_dump(),
-            "numeric": cfg.numeric.model_dump(),
-        })
+
+        return JSONResponse(
+            {
+                "name": cfg.name,
+                "hash": cfg.hash,
+                "grid": cfg.grid.model_dump(),
+                "breakwater": cfg.breakwater.model_dump(),
+                "water": {**cfg.water.model_dump(), "wavelength": wavelength},
+                "vegetation": cfg.vegetation.model_dump(),
+                "numeric": cfg.numeric.model_dump(),
+            }
+        )
     except Exception as e:
         print(f"Error getting config {name}: {e}")
         traceback.print_exc()
@@ -68,20 +72,23 @@ async def get_config(request: Request) -> JSONResponse:
 async def create_config(request: Request) -> JSONResponse:
     """Create a new configuration."""
     data = await request.json()
-    
+
     try:
         # Create config object from data
         cfg = config_module.Config(**data)
-        
+
         # Write to file
         config_path = CONFIG_DIR / f"{cfg.name}.yml"
         config_module.write_config(cfg, config_path)
-        
-        return JSONResponse({
-            "name": cfg.name,
-            "hash": cfg.hash,
-            "path": str(config_path),
-        }, status_code=201)
+
+        return JSONResponse(
+            {
+                "name": cfg.name,
+                "hash": cfg.hash,
+                "path": str(config_path),
+            },
+            status_code=201,
+        )
     except Exception as e:
         print(f"Error creating config: {e}")
         traceback.print_exc()
@@ -92,28 +99,30 @@ async def update_config(request: Request) -> JSONResponse:
     """Update an existing configuration."""
     name = request.path_params["name"]
     data = await request.json()
-    
+
     config_path = CONFIG_DIR / f"{name}.yml"
     if not config_path.exists():
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
-    
+
     try:
         # Create updated config
         cfg = config_module.Config(**data)
-        
+
         # Save with potentially new name
         new_path = CONFIG_DIR / f"{cfg.name}.yml"
         config_module.write_config(cfg, new_path)
-        
+
         # Delete old file if name changed
         if name != cfg.name and config_path.exists():
             config_path.unlink()
-        
-        return JSONResponse({
-            "name": cfg.name,
-            "hash": cfg.hash,
-            "path": str(new_path),
-        })
+
+        return JSONResponse(
+            {
+                "name": cfg.name,
+                "hash": cfg.hash,
+                "path": str(new_path),
+            }
+        )
     except Exception as e:
         print(f"Error updating config {name}: {e}")
         traceback.print_exc()
@@ -124,10 +133,10 @@ async def delete_config(request: Request) -> JSONResponse:
     """Delete a configuration."""
     name = request.path_params["name"]
     config_path = CONFIG_DIR / f"{name}.yml"
-    
+
     if not config_path.exists():
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
-    
+
     try:
         config_path.unlink()
         return JSONResponse({"message": "Configuration deleted"})
@@ -141,19 +150,21 @@ async def simulate_config(request: Request) -> JSONResponse:
     """Run simulation for a configuration."""
     name = request.path_params["name"]
     config_path = CONFIG_DIR / f"{name}.yml"
-    
+
     if not config_path.exists():
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
-    
+
     try:
         # Load config and run simulation
         cfg = config_module.read_config(config_path)
         run_simulation(cfg)
-        
-        return JSONResponse({
-            "success": True,
-            "message": "Simulation completed successfully",
-        })
+
+        return JSONResponse(
+            {
+                "success": True,
+                "message": "Simulation completed successfully",
+            }
+        )
     except Exception as e:
         print(f"Error running simulation for {name}: {e}")
         traceback.print_exc()
@@ -166,15 +177,14 @@ async def calculate_wavelength(request: Request) -> JSONResponse:
         data = await request.json()
         wave_period = data.get("wave_period")
         water_level = data.get("water_level")
-        
+
         if wave_period is None or water_level is None:
             return JSONResponse(
-                {"error": "wave_period and water_level are required"}, 
-                status_code=400
+                {"error": "wave_period and water_level are required"}, status_code=400
             )
-        
+
         wavelength = compute_wavelength(wave_period, water_level)
-        
+
         return JSONResponse({"wavelength": wavelength})
     except Exception as e:
         print(f"Error calculating wavelength: {e}")
@@ -186,14 +196,14 @@ async def analyze_config(request: Request) -> JSONResponse:
     """Analyze simulation results for a configuration."""
     name = request.path_params["name"]
     config_path = CONFIG_DIR / f"{name}.yml"
-    
+
     if not config_path.exists():
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
-    
+
     try:
         cfg = config_module.read_config(config_path)
         analysis_results = analyze_simulation(cfg, save_results=False)
-        
+
         return JSONResponse(analysis_results)
     except Exception as e:
         print(f"Error analyzing config {name}: {e}")

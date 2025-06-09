@@ -1,42 +1,48 @@
-hash: 39ceea3f  # hash of the config (automatically modified)
+hash: 536c93dd  # hash of the config (automatically modified)
 grid: # computational grid configuration
-  hash: 8523e2b7  # hash of the config (automatically modified)
-  length: 112.0 # length of the computational domain (m)
-  nx_cells: 1000 # number of cells in x-direction
-  n_layers: 10 # number of vertical layers (2-3 recommended)
+  hash: 52c30eb6  # Hash of the configuration (automatically generated)
+  length: 112.0 # Length of the computational domain (m)
+  nx_cells: 560 # Number of cells in x-direction
+  n_layers: 2 # Number of vertical layers (2-3 recommended for efficiency)
 breakwater: # configuration for the breakwater
-  hash: 7f1ed611  # hash of the config (automatically modified)
-  crest_height: 0.9167 # height of the crest from the floor (m)
-  crest_width: 1.3761 # crest width (m)
-  slope: 1.75 # slope of the breakwater sides (H:V ratio)
-  porosity: 0.4 # porosity of the breakwater (-)
-  stone_density: 2700.0 # density of the stones (kg/m^3)
-  armour_dn50: 0.3931 # median diameter of the armour stones (m)
-  filter_dn50: 0.1821 # median diameter of the filter stones (m)
-  core_dn50: 0.0846 # median diameter of the core stones (m)
+  hash: 9793d84f  # Hash of the configuration (automatically generated)
+  crest_height: 0.9167 # Height of the crest from the floor (m)
+  crest_width: 1.3761 # Width of the crest (m)
+  slope: 1.75 # Slope of the breakwater sides (H:V ratio)
+  porosity: 0.4 # Porosity of the breakwater (0-1)
+  stone_density: 2700.0 # Density of the stones (kg/m^3)
+  armour_dn50: 0.3931 # Median diameter of armour stones (m)
 water: # configuration for the water in the channel or bay
-  hash: dd56c41a  # hash of the config (automatically modified)
-  water_level: 1.65 # still water level (m)
-  water_density: 1000.0 # density of the water (kg/m^3)
-  wave_height: 1.1 # wave height for regular waves (m)
-  wave_period: 8.0 # wave period for regular waves (s)
+  hash: 0c94b812  # Hash of the configuration (automatically generated)
+  water_level: 1.2375 # Still water level (m)
+  water_density: 1000.0 # Density of water (kg/m^3)
+  wave_height: 0.25 # Wave height for regular waves (m)
+  wave_period: 8.0 # Wave period for regular waves (s)
 vegetation: # configuration for the vegetation on the breakwater
-  hash: c3d40b7d  # hash of the config (automatically modified)
-  enable: true # enable vegetation on the breakwater crest
-  plant_height: 0.5 # height of plants (m)
-  plant_diameter: 0.01 # diameter of plant stems (m)
-  plant_density: 100.0 # number of plant stems per square meter
-  drag_coefficient: 1.0 # drag coefficient for vegetation
+  hash: a83879de  # Hash of the configuration (automatically generated)
+  enable: true # Enable vegetation on the breakwater crest
+  type: # Primary vegetation type
+    plant_height: 0.5
+    plant_diameter: 0.02
+    plant_density: 50.0
+    drag_coefficient: 1.2
+  other_type: # Optional second vegetation type
+  distribution: half # Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'
+  type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
 numeric: # configuration for the numerical parameters
-  hash: c8a49787  # hash of the config (automatically modified)
-  n_waves: 1000 # number of waves to simulate
-  time_step: 0.01 # initial time step (s) - adaptive time stepping will adjust
-  breakwater_start_position: 70.0 # start position of the breakwater (m)
-  wave_gauge_positions: # x-positions of wave gauges (m)
+  hash: 1cc2697f  # Hash of the configuration (automatically generated)
+  n_waves: 100 # Number of waves to simulate
+  time_step: 0.03 # Initial time step (s) - adaptive time stepping will adjust this
+  breakwater_start_position: 70.0 # Start position of the breakwater (m)
+  wave_gauge_positions: # X-positions of wave gauges (m)
   - 20.0
   - 30.0
+  - 40.0
+  - 50.0
+  - 60.0
   - 70.0
-  - 72.3
-  - 74.6
+  - 75.0
   - 80.0
-  output_interval: 1.0 # time interval for output (s)
+  - 90.0
+  - 100.0
+  output_interval: 1.0 # Time interval for output (s)

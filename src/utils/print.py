@@ -69,9 +69,7 @@ def done_print(
                 print(" ".ljust(shutil.get_terminal_size().columns))
             cursor_up(overwrite_n_extra_lines + 1)
         print(
-            f"\r{' ' * indent}{symbol} {text}".ljust(
-                shutil.get_terminal_size().columns
-            )
+            f"\r{' ' * indent}{symbol} {text}".ljust(shutil.get_terminal_size().columns)
         )
 
 
@@ -95,9 +93,7 @@ def error_print(
     symbol = f"\033[1m\033[91m[{symbol}]\033[0m"
     if echo:
         print(
-            f"\r{' ' * indent}{symbol} {text}".ljust(
-                shutil.get_terminal_size().columns
-            )
+            f"\r{' ' * indent}{symbol} {text}".ljust(shutil.get_terminal_size().columns)
         )
 
 

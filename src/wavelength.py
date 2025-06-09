@@ -38,9 +38,7 @@ def compute_wavelength(
     for _ in range(n_iter):
         L = L - _compute_dispersion_relation(
             L, water_depth, wave_period
-        ) / _compute_dispersion_relation_derivative(
-            L, water_depth, wave_period
-        )
+        ) / _compute_dispersion_relation_derivative(L, water_depth, wave_period)
     return L
 
 
@@ -70,9 +68,7 @@ def _compute_dispersion_relation(L: float, h: float, T: float) -> float:
     return L - g * T**2 / (2 * pi) * tanh(2 * pi * h / L)
 
 
-def _compute_dispersion_relation_derivative(
-    L: float, h: float, T: float
-) -> float:
+def _compute_dispersion_relation_derivative(L: float, h: float, T: float) -> float:
     """
     Compute the derivative of the dispersion relation for Newton-Raphson iteration.
 

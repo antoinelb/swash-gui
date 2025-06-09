@@ -8,6 +8,7 @@ import typer
 from src.dashboard import run_server
 from src.utils.print import done_print, error_print, load_print
 
+from .analysis import analyze_simulation
 from .config import Config, read_config, write_config
 from .simulation import run_simulation
 from .utils.paths import root_dir
@@ -54,22 +55,21 @@ def _init_cli() -> typer.Typer:
     cli.command("d", hidden=True)(_run_dashboard)
     cli.command("clean")(_clean)
     cli.command("cc", hidden=True)(_clean)
+    cli.command("analyze")(_analyze)
+    cli.command("a", hidden=True)(_analyze)
     return cli
 
 
 def _create_or_update(
     files: list[str] = typer.Argument(
         ...,
-        help="File(s) to create or update (a .yml extension will be added "
-        "if missing)",
-    )
+        help="File(s) to create or update (a .yml extension will be added if missing)",
+    ),
 ) -> None:
     """
     (c) Creates or updates experiment config files with defaults.
     """
-    files = [
-        f"{file}.yml" if not file.endswith(".yml") else file for file in files
-    ]
+    files = [f"{file}.yml" if not file.endswith(".yml") else file for file in files]
     for file in _expand_paths(files):
         path = Path(file)
         try:
@@ -121,17 +121,17 @@ def _clean(
 ) -> None:
     """
     (cc) Clean up simulation directories that don't have corresponding configs.
-    
+
     This command removes simulation directories in the simulations/ folder that
     don't correspond to any configuration file in the config/ directory.
     """
     config_dir = root_dir / "config"
     simulations_dir = root_dir / "simulations"
-    
+
     if not simulations_dir.exists():
         done_print("No simulations directory found, nothing to clean.")
         return
-    
+
     # Get all config names and their hashes
     config_hashes = {}
     if config_dir.exists():
@@ -141,45 +141,45 @@ def _clean(
                 config_hashes[config.name] = config.hash
             except Exception as e:
                 error_print(f"Error reading config {config_file}: {e}")
-    
+
     # Find orphaned simulation directories
     orphaned_dirs = []
     for sim_dir in simulations_dir.iterdir():
         if not sim_dir.is_dir():
             continue
-            
+
         # Parse directory name (format: <name>_<hash>)
         parts = sim_dir.name.rsplit("_", 1)
         if len(parts) != 2:
             orphaned_dirs.append(sim_dir)
             continue
-            
+
         name, dir_hash = parts
-        
+
         # Check if this corresponds to a current config
         if name not in config_hashes or config_hashes[name] != dir_hash:
             orphaned_dirs.append(sim_dir)
-    
+
     if not orphaned_dirs:
         done_print("No orphaned simulation directories found.")
         return
-    
+
     # Show what will be deleted
     load_print(f"Found {len(orphaned_dirs)} orphaned simulation directories:")
     for dir_path in orphaned_dirs:
         print(f"  - {dir_path.relative_to(root_dir)}")
-    
+
     if dry_run:
         done_print("Dry run complete. No directories were deleted.")
         return
-    
+
     # Confirm deletion
     if not force:
         confirm = typer.confirm("Delete these directories?")
         if not confirm:
             print("Cancelled.")
             return
-    
+
     # Delete directories
     deleted_count = 0
     for dir_path in orphaned_dirs:
@@ -188,8 +188,31 @@ def _clean(
             deleted_count += 1
         except Exception as e:
             error_print(f"Error deleting {dir_path}: {e}")
-    
+
     done_print(f"Deleted {deleted_count} orphaned simulation directories.")
+
+
+def _analyze(
+    configs: list[str] = typer.Argument(
+        ...,
+        help="Files or directories containing the experiment configuration",
+    ),
+) -> None:
+    """
+    (a) Analyze simulation results and generate plots.
+    """
+    for config_ in _expand_paths(configs):
+        path = Path(config_)
+        config = read_config(path)
+        load_print(f"Analyzing simulation {config.name}...")
+        try:
+            results = analyze_simulation(config, save_results=True)
+            if "error" in results:
+                error_print(f"Analysis failed: {results['error']}")
+            else:
+                done_print(f"Analysis completed for {config.name}")
+        except Exception as e:
+            error_print(f"Analysis failed: {e}")
 
 
 def _expand_paths(paths: list[str]) -> list[Path]:

@@ -27,7 +27,7 @@ def create_app() -> Starlette:
         Mount("/js", app=StaticFiles(directory=str(STATIC_DIR / "js"))),
         Mount("/assets", app=StaticFiles(directory=str(STATIC_DIR / "assets"))),
     ]
-    
+
     app = Starlette(
         debug=True,
         routes=[
@@ -38,7 +38,7 @@ def create_app() -> Starlette:
             Route("/", serve_spa),
         ],
     )
-    
+
     # Add CORS middleware for development
     app.add_middleware(
         CORSMiddleware,
@@ -46,7 +46,7 @@ def create_app() -> Starlette:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     return app
 
 
