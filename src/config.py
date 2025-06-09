@@ -16,23 +16,23 @@ class ComputationalGridConfig(pydantic.BaseModel):
         description="Hash of the configuration (automatically generated)",
     )
 
-    # domain size
-    length: float = pydantic.Field(
-        default=112.0, description="Length of the computational domain (m)"
-    )
-
-    # grid resolution
-    nx_cells: int = pydantic.Field(
-        default=500, description="Number of cells in x-direction"
-    )
-
-    # vertical layers
-    n_layers: int = pydantic.Field(
-        default=2,
-        description="Number of vertical layers (2-3 recommended for efficiency)",
-    )
-
     _hash_config = utils.validators.hash_config()
+    
+    # Fixed grid parameters (not configurable)
+    @property
+    def length(self) -> float:
+        """Fixed domain length (m)"""
+        return 112.0
+    
+    @property
+    def nx_cells(self) -> int:
+        """Fixed number of grid cells"""
+        return 500
+    
+    @property
+    def n_layers(self) -> int:
+        """Fixed number of vertical layers"""
+        return 2
 
 
 
@@ -72,22 +72,23 @@ class NumericConfig(pydantic.BaseModel):
 
     # simulation parameters
     n_waves: int = pydantic.Field(default=50, description="Number of waves to simulate")
-    time_step: float = pydantic.Field(
-        default=0.05,
-        description="Initial time step (s) - adaptive time stepping will adjust this",
-    )
-
 
     # gauge positions in x (m)
     wave_gauge_positions: list[float] = pydantic.Field(
         default=[20.0, 60.0, 65.0, 80.0, 100.0],
         description="X-positions of wave gauges (m)",
     )
-
-    # output frequency (s)
-    output_interval: float = pydantic.Field(
-        default=0.1, description="Time interval for output (s)"
-    )
+    
+    # Fixed numerical parameters (not configurable)
+    @property
+    def time_step(self) -> float:
+        """Fixed initial time step (s)"""
+        return 0.05
+    
+    @property
+    def output_interval(self) -> float:
+        """Fixed output interval (s)"""
+        return 0.1
 
     _hash_config = utils.validators.hash_config()
 

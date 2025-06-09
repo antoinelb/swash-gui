@@ -81,12 +81,6 @@ export function createConfigViewer(container, configStore, editable = false) {
     ${!editable ? createField('Hash', config.hash?.substring(0, 8) || 'N/A', 'hash', 'text') : ''}
   </section>
 
-  <section>
-    <h3>Computational Grid</h3>
-    ${createField('Domain Length (m)', config.grid.length, 'grid.length')}
-    ${createField('Grid Cells (X)', config.grid.nx_cells, 'grid.nx_cells')}
-    ${createField('Vertical Layers', config.grid.n_layers, 'grid.n_layers')}
-  </section>
 
 
   <section>
@@ -101,8 +95,6 @@ export function createConfigViewer(container, configStore, editable = false) {
   <section>
     <h3>Numerical Parameters</h3>
     ${createField('Number of Waves', config.numeric.n_waves, 'numeric.n_waves')}
-    ${createField('Time Step (s)', config.numeric.time_step, 'numeric.time_step')}
-    ${createField('Output Interval (s)', config.numeric.output_interval, 'numeric.output_interval')}
     ${createArrayField('Wave Gauge Positions (m)', config.numeric.wave_gauge_positions, 'numeric.wave_gauge_positions')}
   </section>
 </div>
@@ -137,9 +129,7 @@ export function createConfigViewer(container, configStore, editable = false) {
     updateField('name', config.name);
     if (!editable) updateField('hash', config.hash?.substring(0, 8) || 'N/A');
 
-    updateField('grid.length', config.grid.length);
-    updateField('grid.nx_cells', config.grid.nx_cells);
-    updateField('grid.n_layers', config.grid.n_layers);
+    // Grid parameters are fixed - no need to update
 
 
     updateField('water.water_level', config.water.water_level);
@@ -149,8 +139,7 @@ export function createConfigViewer(container, configStore, editable = false) {
 
 
     updateField('numeric.n_waves', config.numeric.n_waves);
-    updateField('numeric.time_step', config.numeric.time_step);
-    updateField('numeric.output_interval', config.numeric.output_interval);
+    // Time step and output interval are fixed - no need to update
     updateField('numeric.wave_gauge_positions', config.numeric.wave_gauge_positions?.join(', '));
   };
 

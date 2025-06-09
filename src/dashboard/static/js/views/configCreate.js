@@ -14,21 +14,18 @@ export function createConfigCreateView() {
   const defaultConfig = {
     name: 'new-config',
     grid: {
-      length: 100.0,
-      nx_cells: 1000,
-      n_layers: 10
+      // Grid parameters are fixed at 112.0m length, 500 cells, 2 layers
     },
     water: {
-      water_level: 5.0,
-      water_density: 1025.0,
-      wave_height: 2.0,
-      wave_period: 8.0
+      water_level: 1.0,
+      water_density: 1000.0,
+      wave_height: 0.5,
+      wave_period: 6.0
     },
     numeric: {
-      n_waves: 10,
-      time_step: 0.01,
-      output_interval: 1.0,
-      wave_gauge_positions: [20.0, 30.0, 70.0, 80.0]
+      n_waves: 50,
+      // Time step (0.05s) and output interval (0.1s) are fixed
+      wave_gauge_positions: [20.0, 60.0, 80.0, 100.0]
     }
   };
   

@@ -17,32 +17,6 @@ def create_config_display(config: config_module.Config, editable: bool = False):
             ],
         ),
         create_section(
-            "Computational Grid",
-            [
-                create_field(
-                    "Domain Length (m)",
-                    config.grid.length,
-                    "grid.length",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Grid Cells (X)",
-                    config.grid.nx_cells,
-                    "grid.nx_cells",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Vertical Layers",
-                    config.grid.n_layers,
-                    "grid.n_layers",
-                    editable,
-                    "number",
-                ),
-            ],
-        ),
-        create_section(
             "Water & Waves",
             [
                 create_field(
@@ -82,20 +56,6 @@ def create_config_display(config: config_module.Config, editable: bool = False):
                     "Number of Waves",
                     config.numeric.n_waves,
                     "numeric.n_waves",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Time Step (s)",
-                    config.numeric.time_step,
-                    "numeric.time_step",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Output Interval (s)",
-                    config.numeric.output_interval,
-                    "numeric.output_interval",
                     editable,
                     "number",
                 ),

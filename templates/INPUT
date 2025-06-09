@@ -15,16 +15,16 @@ MODE NONSTATIONARY ONEDIMENSIONAL
 $=============================================================================
 $ COMPUTATIONAL GRID
 $=============================================================================
-$ 1D grid: length={{ grid.length }}m, cells={{ grid.nx_cells }}
-CGRID REGULAR 0.0 0.0 0.0 {{ grid.length }} 0.0 {{ grid.nx_cells }} 0
+$ 1D grid: length=112.0m, cells=500
+CGRID REGULAR 0.0 0.0 0.0 112.0 0.0 500 0
 
-$ Vertical layers={{ grid.n_layers }} (equidistant)
-VERTICAL {{ grid.n_layers }}
+$ Vertical layers=2 (equidistant)
+VERTICAL 2
 
 $=============================================================================
 $ BATHYMETRY
 $=============================================================================
-INPGRID BOTTOM REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
+INPGRID BOTTOM REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
 READINP BOTTOM 1.0 'bathymetry.txt' IDLA=3 FREE
 
 
@@ -45,10 +45,8 @@ $=============================================================================
 $ Manning friction n=0.019
 FRICTION MANNING 0.019
 
-{%- if grid.n_layers <= 3 %}
 $ Wave breaking for coarse vertical resolution
 BREAKING 0.6 0.3
-{%- endif %}
 
 $=============================================================================
 $ NUMERICS  
@@ -70,7 +68,7 @@ POINTS 'WG{{ "%02d"|format(i+1) }}' {{ pos }} 0.0
 $ Time series output
 {%- for i, pos in enumerate(numeric.wave_gauge_positions) %}
 TABLE 'WG{{ "%02d"|format(i+1) }}' NOHEADER 'wg{{ "%02d"|format(i+1) }}.txt' &
-      WATLEV VEL OUTPUT 000000.000 {{ numeric.output_interval }} SEC
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
 {%- endfor %}
 
 $ Wave statistics (last 30 minutes by default)
@@ -78,13 +76,13 @@ QUANTITY HSIG dur=1800 sec
 QUANTITY SETUP dur=1800 sec
 
 $ Spatial output at end
-FRAME 'channel' 0.0 0.0 0.0 {{ grid.length }} 1.0 {{ grid.nx_cells//4 }} 1
+FRAME 'channel' 0.0 0.0 0.0 112.0 1.0 125 1
 BLOCK 'channel' NOHEADER 'final_state.mat' LAY-OUT 3 &
-      WATLEV VEL HSIG SETUP OUTPUT 000000.000 {{ numeric.output_interval }} SEC
+      WATLEV VEL HSIG SETUP OUTPUT 000000.000 0.1 SEC
 
 $=============================================================================
 $ RUN
 $=============================================================================
-COMPUTE 000000.000 {{ numeric.time_step }} SEC {{ "%010.3f"|format(simulation_duration) }}
+COMPUTE 000000.000 0.05 SEC {{ "%010.3f"|format(simulation_duration) }}
 
 STOP

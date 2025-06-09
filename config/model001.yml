@@ -1,9 +1,6 @@
-hash: 88e3f680  # hash of the config (automatically modified)
+hash: 87a67fb2  # hash of the config (automatically modified)
 grid: # computational grid configuration
-  hash: 52c30eb6  # Hash of the configuration (automatically generated)
-  length: 112.0 # Length of the computational domain (m)
-  nx_cells: 560 # Number of cells in x-direction
-  n_layers: 2 # Number of vertical layers (2-3 recommended for efficiency)
+  hash: 44136fa3  # Hash of the configuration (automatically generated)
 water: # configuration for the water in the channel
   hash: 0c94b812  # Hash of the configuration (automatically generated)
   water_level: 1.2375 # Still water level (m)
@@ -11,13 +8,11 @@ water: # configuration for the water in the channel
   wave_height: 0.25 # Wave height for regular waves (m)
   wave_period: 8.0 # Wave period for regular waves (s)
 numeric: # configuration for the numerical parameters
-  hash: 094bd1a5  # Hash of the configuration (automatically generated)
+  hash: 4d0d2c81  # Hash of the configuration (automatically generated)
   n_waves: 100 # Number of waves to simulate
-  time_step: 0.05 # Initial time step (s) - adaptive time stepping will adjust this
   wave_gauge_positions: # X-positions of wave gauges (m)
   - 20.0
   - 60.0
   - 80.0
   - 90.0
   - 100.0
-  output_interval: 0.1 # Time interval for output (s)
