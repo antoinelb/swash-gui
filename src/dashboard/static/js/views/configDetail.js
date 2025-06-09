@@ -3,6 +3,7 @@
 import * as api from '../api.js';
 import { createConfigStore } from '../stores/configStore.js';
 import { createConfigViewer } from '../components/configViewer.js';
+import { createChannelDiagram } from '../components/breakwaterDiagram.js';
 import { icon } from '../utils.js';
 
 export function createConfigDetailView(configName) {
@@ -38,6 +39,10 @@ export function createConfigDetailView(configName) {
 </div>
 
 <div class="config-detail">
+  <div id="diagram" class="panel">
+    <h3>Channel Diagram</h3>
+    <div id="diagram-content"></div>
+  </div>
   <div id="analysis" class="panel">
     <h3>Analysis Results</h3>
     <p style="color: var(--subtext0); text-align: center; padding: 40px;">
@@ -107,64 +112,52 @@ export function createConfigDetailView(configName) {
     }
   };
 
-  const loadAnalysisResults = async () => {
-    try {
-      const analysis = await api.getAnalysis(configName);
-      renderAnalysisResults(analysis);
-    } catch (error) {
-      console.error('Error loading analysis:', error);
-      document.getElementById('analysis').innerHTML = `
-        <h3>Analysis Results</h3>
-        <p style="color: var(--red); text-align: center; padding: 40px;">
-          Error loading analysis: ${error.message}
-        </p>
-      `;
-    }
-  };
-
   const renderAnalysisResults = (analysis) => {
     const analysisPanel = document.getElementById('analysis');
-    
+
     if (analysis.error) {
       analysisPanel.innerHTML = `
-        <h3>Analysis Results</h3>
-        <p style="color: var(--red); text-align: center; padding: 40px;">
-          ${analysis.error}
-        </p>
-      `;
+<h3>Analysis Results</h3>
+<p style="color: var(--red); text-align: center; padding: 40px;">
+  ${analysis.error}
+</p>
+`;
       return;
     }
 
     analysisPanel.innerHTML = `
-      <h3>Analysis Results</h3>
-      <div class="analysis-content">
-        <div class="analysis-metrics">
-          <h4>Wave Attenuation</h4>
-          <div class="metric-cards">
-            <div class="metric-card">
-              <span class="metric-label">Transmission Coefficient (Kt)</span>
-              <span class="metric-value">${analysis.transmission_analysis.transmission_coefficient?.toFixed(3) || 'N/A'}</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Energy Dissipation</span>
-              <span class="metric-value">${analysis.transmission_analysis.energy_dissipation_percent?.toFixed(1) || 'N/A'}%</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Incident Wave Height</span>
-              <span class="metric-value">${analysis.transmission_analysis.incident_wave_height?.toFixed(3) || 'N/A'} m</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Transmitted Wave Height</span>
-              <span class="metric-value">${analysis.transmission_analysis.transmitted_wave_height?.toFixed(3) || 'N/A'} m</span>
-            </div>
-          </div>
-        </div>
-        <div class="analysis-plot">
-          <h4>Wave Gauge Time Series</h4>
-          <div id="time-series-plot" style="width: 100%; height: 500px;"></div>
-        </div>
+<h3>Analysis Results</h3>
+<div class="analysis-content">
+  <div class="analysis-metrics">
+    <h4>Wave Attenuation</h4>
+    <div class="metric-cards">
+      <div class="metric-card">
+        <span class="metric-label">Transmission Coefficient (Kt)</span>
+        <span class="metric-value">${analysis.transmission_analysis.transmission_coefficient?.toFixed(3) ||
+      'N/A'}</span>
       </div>
-    `;
+      <div class="metric-card">
+        <span class="metric-label">Energy Dissipation</span>
+        <span class="metric-value">${analysis.transmission_analysis.energy_dissipation_percent?.toFixed(1) ||
+      'N/A'}%</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Incident Wave Height</span>
+        <span class="metric-value">${analysis.transmission_analysis.incident_wave_height?.toFixed(3) || 'N/A'} m</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-label">Transmitted Wave Height</span>
+        <span class="metric-value">${analysis.transmission_analysis.transmitted_wave_height?.toFixed(3) || 'N/A'}
+          m</span>
+      </div>
+    </div>
+  </div>
+  <div class="analysis-plot">
+    <h4>Wave Gauge Time Series</h4>
+    <div id="time-series-plot" style="width: 100%; height: 500px;"></div>
+  </div>
+</div>
+`;
 
     // Render the plotly chart with Catppuccin theme
     if (analysis.time_series_plot && window.Plotly) {
@@ -203,6 +196,10 @@ export function createConfigDetailView(configName) {
         configStore,
         isEditing
       ),
+      createChannelDiagram(
+        document.getElementById('diagram-content'),
+        configStore
+      ),
     ];
 
     components.forEach(c => c.mount());
@@ -219,9 +216,6 @@ export function createConfigDetailView(configName) {
 
       // Mount components
       mountComponents();
-
-      // Try to load analysis results if they exist
-      loadAnalysisResults();
 
       // Return cleanup function
       return () => {

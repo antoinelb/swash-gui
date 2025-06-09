@@ -43,9 +43,8 @@ body {
 #app {
   min-height: 100vh;
   padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: calc(100vw - 48px);
+  width: 100vw;
+  box-sizing: border-box;
 }
 
 /* Analysis Results Styles */
@@ -353,6 +352,13 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
+/* Diagrams */
+.breakwater-svg {
+  width: 100%;
+  height: 400px;
+  background-color: var(--mantle);
+  border-radius: 8px;
+}
 
 /* Empty State */
 .empty-state {

@@ -16,30 +16,28 @@ uv sync --group dev
 ### Testing and Code Quality
 ```bash
 # Run tests
-uv run pytest
+pytest
 
 # Code formatting and linting
-uv run black src/
-uv run isort src/
-uv run ruff check src/
+black src/
+isort src/
+ruff check src/
 
 # Type checking
-uv run python -m py.typed  # If available
+ty check src
 ```
 
 ### CLI Usage
 ```bash
 # Main CLI entry points
-python -m src.cli --help
-uv run swash-gui --help     # Installed script
-uv run swg --help           # Short alias
+swg --help
 
 # Common operations
-python -m src.cli create config/experiment.yml    # Create config
-python -m src.cli run config/experiment.yml       # Run simulation
-python -m src.cli dashboard                       # Launch web UI
-python -m src.cli analyze config/experiment.yml   # Analyze results
-python -m src.cli clean                           # Clean orphaned sims
+swg create config/experiment.yml    # Create config
+swg run config/experiment.yml       # Run simulation
+swg dashboard                       # Launch web UI
+swg analyze config/experiment.yml   # Analyze results
+swg clean                           # Clean orphaned sims
 ```
 
 ### Dashboard Development

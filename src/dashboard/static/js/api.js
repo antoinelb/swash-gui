@@ -12,12 +12,12 @@ async function apiCall(url, options = {}) {
       },
       ...options,
     });
-    
+
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || `HTTP ${response.status}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('API Error:', error);
@@ -59,8 +59,4 @@ export async function runSimulation(name) {
   return await apiCall(`/simulate/${name}`, {
     method: 'POST',
   });
-}
-
-export async function getAnalysis(name) {
-  return await apiCall(`/analyze/${name}`);
 }

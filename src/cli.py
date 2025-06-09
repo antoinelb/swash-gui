@@ -54,6 +54,8 @@ def _init_cli() -> typer.Typer:
     cli.command("d", hidden=True)(_run_dashboard)
     cli.command("clean")(_clean)
     cli.command("cc", hidden=True)(_clean)
+    cli.command("analyze")(_analyze)
+    cli.command("a", hidden=True)(_analyze)
     return cli
 
 
@@ -189,6 +191,47 @@ def _clean(
     done_print(f"Deleted {deleted_count} orphaned simulation directories.")
 
 
+def _analyze(
+    configs: list[str] = typer.Argument(
+        ...,
+        help="Files or directories containing the experiment configuration to analyze",
+    ),
+) -> None:
+    """
+    (a) Analyze completed simulations and generate wave energy plots.
+    """
+    from .analysis import analyze_simulation
+    
+    for config_ in _expand_paths(configs):
+        path = Path(config_)
+        config = read_config(path)
+        
+        # Find simulation directory
+        simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
+        
+        if not simulation_dir.exists():
+            error_print(f"Simulation directory not found: {simulation_dir}")
+            continue
+            
+        swash_dir = simulation_dir / "swash"
+        if not swash_dir.exists():
+            error_print(f"SWASH output directory not found: {swash_dir}")
+            continue
+        
+        load_print(f"Analyzing simulation {config.name}...")
+        try:
+            analysis_results = analyze_simulation(simulation_dir, config)
+            
+            if "error" in analysis_results:
+                error_print(f"Analysis failed: {analysis_results['error']}")
+            else:
+                plot_file = analysis_results.get('plot_file', '')
+                if plot_file:
+                    done_print(f"Analysis complete - wave envelope plot saved to analysis/")
+                else:
+                    done_print("Analysis complete")
+        except Exception as e:
+            error_print(f"Analysis failed: {e}")
 
 
 def _expand_paths(paths: list[str]) -> list[Path]:
