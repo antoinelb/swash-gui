@@ -1,5 +1,4 @@
 from dash import html, dcc
-import plotly.graph_objects as go
 
 from src import config as config_module
 
@@ -20,15 +19,14 @@ def create_config_display(config: config_module.Config, editable: bool = False):
         ]),
         
         create_section("Breakwater", [
-            create_field("Start Position (m)", config.breakwater.start_position, "breakwater.start_position", editable, "number"),
-            create_field("End Position (m)", config.breakwater.end_position, "breakwater.end_position", editable, "number"),
+            create_field("Start Position (m)", config.numeric.breakwater_start_position, "numeric.breakwater_start_position", editable, "number"),
+            create_field("End Position (m)", config.breakwater_end_position, "breakwater.end_position", editable, "number"),
             create_field("Crest Height (m)", config.breakwater.crest_height, "breakwater.crest_height", editable, "number"),
             create_field("Crest Width (m)", config.breakwater.crest_width, "breakwater.crest_width", editable, "number"),
             create_field("Porosity", config.breakwater.porosity, "breakwater.porosity", editable, "number"),
             create_field("Stone Density (kg/m³)", config.breakwater.stone_density, "breakwater.stone_density", editable, "number"),
             create_field("Armour Dn50 (m)", config.breakwater.armour_dn50, "breakwater.armour_dn50", editable, "number"),
-            create_field("Filter Dn50 (m)", config.breakwater.filter_dn50, "breakwater.filter_dn50", editable, "number"),
-            create_field("Core Dn50 (m)", config.breakwater.core_dn50, "breakwater.core_dn50", editable, "number"),
+            create_field("Slope", config.breakwater.slope, "breakwater.slope", editable, "number"),
         ]),
         
         create_section("Water & Waves", [

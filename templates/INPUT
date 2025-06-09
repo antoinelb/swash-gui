@@ -25,7 +25,7 @@ $=============================================================================
 $ BATHYMETRY
 $=============================================================================
 INPGRID BOTTOM REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP BOTTOM 1.0 'bathymetry.dat' IDLA=3 FREE
+READINP BOTTOM 1.0 'bathymetry.txt' IDLA=3 FREE
 
 $=============================================================================
 $ BREAKWATER POROSITY
@@ -34,10 +34,10 @@ $=============================================================================
 $ Breakwater: {{ numeric.breakwater_start_position }}m to {{ "%.1f"|format(breakwater_end) }}m, slope={{ breakwater.slope }}:1
 
 INPGRID POROSITY REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP POROSITY 1.0 'porosity.dat' IDLA=3 FREE
+READINP POROSITY 1.0 'porosity.txt' IDLA=3 FREE
 
 INPGRID HSTRUCTURE REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
-READINP HSTRUCTURE 1.0 'structure_height.dat' IDLA=3 FREE
+READINP HSTRUCTURE 1.0 'structure_height.txt' IDLA=3 FREE
 
 $ Porosity parameters for rock: Dn50={{ breakwater.armour_dn50 }}m, height={{ breakwater.crest_height }}m
 POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{ water.wave_period }}
@@ -46,8 +46,14 @@ POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{
 $=============================================================================
 $ VEGETATION
 $=============================================================================
-$ Uniform vegetation: height={{ vegetation.plant_height }}m, diameter={{ vegetation.plant_diameter }}m, density={{ "%d"|format(vegetation.plant_density|int) }}, drag={{ vegetation.drag_coefficient }}
-VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} {{ "%d"|format(vegetation.plant_density|int) }} {{ vegetation.drag_coefficient }}
+$ Spatially varying vegetation density on breakwater crest only
+$ Plant characteristics: height={{ vegetation.plant_height }}m, diameter={{ vegetation.plant_diameter }}m, drag={{ vegetation.drag_coefficient }}
+$ Base density: 1.0 (multiplied by spatial density from vegetation_density.dat)
+
+INPGRID NPLANTS REGULAR 0.0 0.0 0.0 {{ grid.nx_cells }} 0 {{ "%.3f"|format(grid.length/grid.nx_cells) }} 1.0
+READINP NPLANTS 1.0 'vegetation_density.txt' IDLA=3 FREE
+
+VEGETATION {{ vegetation.plant_height }} {{ vegetation.plant_diameter }} 1 {{ vegetation.drag_coefficient }}
 {%- endif %}
 
 $=============================================================================
@@ -90,7 +96,7 @@ POINTS 'WG{{ "%02d"|format(i+1) }}' {{ pos }} 0.0
 
 $ Time series output
 {%- for i, pos in enumerate(numeric.wave_gauge_positions) %}
-TABLE 'WG{{ "%02d"|format(i+1) }}' NOHEADER 'wg{{ "%02d"|format(i+1) }}.dat' &
+TABLE 'WG{{ "%02d"|format(i+1) }}' NOHEADER 'wg{{ "%02d"|format(i+1) }}.txt' &
       WATLEV VEL OUTPUT 000000.000 {{ numeric.output_interval }} SEC
 {%- endfor %}
 

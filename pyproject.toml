@@ -17,6 +17,7 @@ dependencies = [
     "typer>=0.16.0",
     "uvicorn>=0.34.3",
     "starlette>=0.47.0",
+    "plotly>=6.1.2",
 ]
 
 [project.scripts]
@@ -36,6 +37,11 @@ packages = [
 dev = [
     "black>=25.1.0",
     "isort>=6.0.1",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.1.1",
+    "pytest-mock>=3.14.1",
+    "pytest-timeout>=2.4.0",
     "ruff>=0.11.12",
     "ty>=0.0.1a8",
 ]
@@ -47,3 +53,19 @@ target-version = ['py313']
 [tool.isort]
 profile = "black"
 src_paths = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+  "ignore::DeprecationWarning",
+  "ignore::FutureWarning",
+  "ignore::UserWarning",
+]
+timeout = 60
+
+[tool.coverage.paths]
+source = ["src"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]

@@ -86,3 +86,6 @@ Simulations create directories with format: `simulations/<name>_<hash>/`
 
 ### Commit Guidelines
 - NEVER mention Claude, Claude Code, or Anthropic in commit messages
+
+### File Format Notes
+- Files ending with .dat are text files and not binary ones

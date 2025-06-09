@@ -1,3 +1,4 @@
+import traceback
 from pathlib import Path
 from typing import List
 
@@ -8,6 +9,7 @@ from starlette.routing import Route
 from src import config as config_module
 from src.simulation import run_simulation
 from src.wavelength import compute_wavelength
+from src.analysis import analyze_simulation
 
 CONFIG_DIR = Path("config")
 
@@ -27,7 +29,8 @@ async def list_configs(request: Request) -> JSONResponse:
                 "hash": cfg.hash[:8],
             })
         except Exception as e:
-            # Skip invalid configs
+            # Skip invalid configs but log the error
+            print(f"Error loading config {yaml_file}: {e}")
             continue
     
     return JSONResponse({"configs": sorted(configs, key=lambda x: x["name"])})
@@ -57,6 +60,8 @@ async def get_config(request: Request) -> JSONResponse:
             "numeric": cfg.numeric.model_dump(),
         })
     except Exception as e:
+        print(f"Error getting config {name}: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -78,6 +83,8 @@ async def create_config(request: Request) -> JSONResponse:
             "path": str(config_path),
         }, status_code=201)
     except Exception as e:
+        print(f"Error creating config: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=400)
 
 
@@ -108,6 +115,8 @@ async def update_config(request: Request) -> JSONResponse:
             "path": str(new_path),
         })
     except Exception as e:
+        print(f"Error updating config {name}: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=400)
 
 
@@ -123,6 +132,8 @@ async def delete_config(request: Request) -> JSONResponse:
         config_path.unlink()
         return JSONResponse({"message": "Configuration deleted"})
     except Exception as e:
+        print(f"Error deleting config {name}: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -135,14 +146,17 @@ async def simulate_config(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Configuration not found"}, status_code=404)
     
     try:
-        # Run simulation (this should be async in production)
-        result = run_simulation(config_path)
+        # Load config and run simulation
+        cfg = config_module.read_config(config_path)
+        run_simulation(cfg)
         
         return JSONResponse({
-            "success": result,
-            "message": "Simulation started" if result else "Simulation failed",
+            "success": True,
+            "message": "Simulation completed successfully",
         })
     except Exception as e:
+        print(f"Error running simulation for {name}: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
@@ -163,7 +177,28 @@ async def calculate_wavelength(request: Request) -> JSONResponse:
         
         return JSONResponse({"wavelength": wavelength})
     except Exception as e:
+        print(f"Error calculating wavelength: {e}")
+        traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=400)
+
+
+async def analyze_config(request: Request) -> JSONResponse:
+    """Analyze simulation results for a configuration."""
+    name = request.path_params["name"]
+    config_path = CONFIG_DIR / f"{name}.yml"
+    
+    if not config_path.exists():
+        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+    
+    try:
+        cfg = config_module.read_config(config_path)
+        analysis_results = analyze_simulation(cfg, save_results=False)
+        
+        return JSONResponse(analysis_results)
+    except Exception as e:
+        print(f"Error analyzing config {name}: {e}")
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 def get_api_routes() -> List[Route]:
@@ -175,5 +210,6 @@ def get_api_routes() -> List[Route]:
         Route("/configs/{name}", update_config, methods=["PUT"]),
         Route("/configs/{name}", delete_config, methods=["DELETE"]),
         Route("/simulate/{name}", simulate_config, methods=["POST"]),
+        Route("/analyze/{name}", analyze_config, methods=["GET"]),
         Route("/wavelength", calculate_wavelength, methods=["POST"]),
     ]
