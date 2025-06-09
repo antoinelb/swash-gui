@@ -88,15 +88,6 @@ export function createConfigViewer(container, configStore, editable = false) {
     ${createField('Vertical Layers', config.grid.n_layers, 'grid.n_layers')}
   </section>
 
-  <section>
-    <h3>Breakwater</h3>
-    ${createField('Crest Height (m)', config.breakwater.crest_height, 'breakwater.crest_height')}
-    ${createField('Crest Width (m)', config.breakwater.crest_width, 'breakwater.crest_width')}
-    ${createField('Slope (H:V ratio)', config.breakwater.slope, 'breakwater.slope')}
-    ${createField('Porosity', config.breakwater.porosity, 'breakwater.porosity')}
-    ${createField('Stone Density (kg/m³)', config.breakwater.stone_density, 'breakwater.stone_density')}
-    ${createField('Armour Dn50 (m)', config.breakwater.armour_dn50, 'breakwater.armour_dn50')}
-  </section>
 
   <section>
     <h3>Water & Waves</h3>
@@ -106,35 +97,11 @@ export function createConfigViewer(container, configStore, editable = false) {
     ${createField('Wave Period (s)', config.water.wave_period, 'water.wave_period')}
   </section>
 
-  <section>
-    <h3>Vegetation</h3>
-    ${createCheckbox('Enable Vegetation', config.vegetation.enable, 'vegetation.enable')}
-    
-    <h4>Primary Type</h4>
-    ${createField('Plant Height (m)', config.vegetation.type?.plant_height || config.vegetation.plant_height || 0, 'vegetation.type.plant_height')}
-    ${createField('Plant Diameter (m)', config.vegetation.type?.plant_diameter || config.vegetation.plant_diameter || 0, 'vegetation.type.plant_diameter')}
-    ${createField('Plant Density (/m²)', config.vegetation.type?.plant_density || config.vegetation.plant_density || 0, 'vegetation.type.plant_density')}
-    ${createField('Drag Coefficient', config.vegetation.type?.drag_coefficient || config.vegetation.drag_coefficient || 0, 'vegetation.type.drag_coefficient')}
-    
-    ${config.vegetation.other_type ? `
-    <h4>Secondary Type</h4>
-    ${createField('Plant Height (m)', config.vegetation.other_type.plant_height, 'vegetation.other_type.plant_height')}
-    ${createField('Plant Diameter (m)', config.vegetation.other_type.plant_diameter, 'vegetation.other_type.plant_diameter')}
-    ${createField('Plant Density (/m²)', config.vegetation.other_type.plant_density, 'vegetation.other_type.plant_density')}
-    ${createField('Drag Coefficient', config.vegetation.other_type.drag_coefficient, 'vegetation.other_type.drag_coefficient')}
-    
-    <h4>Distribution</h4>
-    ${createField('Distribution Pattern', config.vegetation.distribution, 'vegetation.distribution', 'text')}
-    ${createField('Primary Type Fraction', config.vegetation.type_fraction, 'vegetation.type_fraction')}
-    ` : ''}
-  </section>
 
   <section>
     <h3>Numerical Parameters</h3>
     ${createField('Number of Waves', config.numeric.n_waves, 'numeric.n_waves')}
     ${createField('Time Step (s)', config.numeric.time_step, 'numeric.time_step')}
-    ${createField('Breakwater Start Position (m)', config.numeric.breakwater_start_position,
-        'numeric.breakwater_start_position')}
     ${createField('Output Interval (s)', config.numeric.output_interval, 'numeric.output_interval')}
     ${createArrayField('Wave Gauge Positions (m)', config.numeric.wave_gauge_positions, 'numeric.wave_gauge_positions')}
   </section>
@@ -174,41 +141,15 @@ export function createConfigViewer(container, configStore, editable = false) {
     updateField('grid.nx_cells', config.grid.nx_cells);
     updateField('grid.n_layers', config.grid.n_layers);
 
-    updateField('breakwater.crest_height', config.breakwater.crest_height);
-    updateField('breakwater.crest_width', config.breakwater.crest_width);
-    updateField('breakwater.slope', config.breakwater.slope);
-    updateField('breakwater.porosity', config.breakwater.porosity);
-    updateField('breakwater.stone_density', config.breakwater.stone_density);
-    updateField('breakwater.armour_dn50', config.breakwater.armour_dn50);
-    updateField('breakwater.filter_dn50', config.breakwater.filter_dn50);
-    updateField('breakwater.core_dn50', config.breakwater.core_dn50);
 
     updateField('water.water_level', config.water.water_level);
     updateField('water.water_density', config.water.water_density);
     updateField('water.wave_height', config.water.wave_height);
     updateField('water.wave_period', config.water.wave_period);
 
-    updateField('vegetation.enable', config.vegetation.enable);
-    
-    // Primary vegetation type (backward compatibility)
-    updateField('vegetation.type.plant_height', config.vegetation.type?.plant_height || config.vegetation.plant_height);
-    updateField('vegetation.type.plant_diameter', config.vegetation.type?.plant_diameter || config.vegetation.plant_diameter);
-    updateField('vegetation.type.plant_density', config.vegetation.type?.plant_density || config.vegetation.plant_density);
-    updateField('vegetation.type.drag_coefficient', config.vegetation.type?.drag_coefficient || config.vegetation.drag_coefficient);
-    
-    // Secondary vegetation type
-    if (config.vegetation.other_type) {
-      updateField('vegetation.other_type.plant_height', config.vegetation.other_type.plant_height);
-      updateField('vegetation.other_type.plant_diameter', config.vegetation.other_type.plant_diameter);
-      updateField('vegetation.other_type.plant_density', config.vegetation.other_type.plant_density);
-      updateField('vegetation.other_type.drag_coefficient', config.vegetation.other_type.drag_coefficient);
-      updateField('vegetation.distribution', config.vegetation.distribution);
-      updateField('vegetation.type_fraction', config.vegetation.type_fraction);
-    }
 
     updateField('numeric.n_waves', config.numeric.n_waves);
     updateField('numeric.time_step', config.numeric.time_step);
-    updateField('numeric.breakwater_start_position', config.numeric.breakwater_start_position);
     updateField('numeric.output_interval', config.numeric.output_interval);
     updateField('numeric.wave_gauge_positions', config.numeric.wave_gauge_positions?.join(', '));
   };

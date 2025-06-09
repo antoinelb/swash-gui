@@ -9,7 +9,6 @@ from starlette.routing import Route
 from src import config as config_module
 from src.simulation import run_simulation
 from src.wavelength import compute_wavelength
-from src.analysis import analyze_simulation
 
 CONFIG_DIR = Path("config")
 
@@ -57,9 +56,7 @@ async def get_config(request: Request) -> JSONResponse:
                 "name": cfg.name,
                 "hash": cfg.hash,
                 "grid": cfg.grid.model_dump(),
-                "breakwater": cfg.breakwater.model_dump(),
                 "water": {**cfg.water.model_dump(), "wavelength": wavelength},
-                "vegetation": cfg.vegetation.model_dump(),
                 "numeric": cfg.numeric.model_dump(),
             }
         )
@@ -192,23 +189,6 @@ async def calculate_wavelength(request: Request) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=400)
 
 
-async def analyze_config(request: Request) -> JSONResponse:
-    """Analyze simulation results for a configuration."""
-    name = request.path_params["name"]
-    config_path = CONFIG_DIR / f"{name}.yml"
-
-    if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
-
-    try:
-        cfg = config_module.read_config(config_path)
-        analysis_results = analyze_simulation(cfg, save_results=False)
-
-        return JSONResponse(analysis_results)
-    except Exception as e:
-        print(f"Error analyzing config {name}: {e}")
-        traceback.print_exc()
-        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 def get_api_routes() -> List[Route]:
@@ -220,6 +200,5 @@ def get_api_routes() -> List[Route]:
         Route("/configs/{name}", update_config, methods=["PUT"]),
         Route("/configs/{name}", delete_config, methods=["DELETE"]),
         Route("/simulate/{name}", simulate_config, methods=["POST"]),
-        Route("/analyze/{name}", analyze_config, methods=["GET"]),
         Route("/wavelength", calculate_wavelength, methods=["POST"]),
     ]

@@ -8,7 +8,6 @@ import typer
 from src.dashboard import run_server
 from src.utils.print import done_print, error_print, load_print
 
-from .analysis import analyze_simulation
 from .config import Config, read_config, write_config
 from .simulation import run_simulation
 from .utils.paths import root_dir
@@ -55,8 +54,6 @@ def _init_cli() -> typer.Typer:
     cli.command("d", hidden=True)(_run_dashboard)
     cli.command("clean")(_clean)
     cli.command("cc", hidden=True)(_clean)
-    cli.command("analyze")(_analyze)
-    cli.command("a", hidden=True)(_analyze)
     return cli
 
 
@@ -192,27 +189,6 @@ def _clean(
     done_print(f"Deleted {deleted_count} orphaned simulation directories.")
 
 
-def _analyze(
-    configs: list[str] = typer.Argument(
-        ...,
-        help="Files or directories containing the experiment configuration",
-    ),
-) -> None:
-    """
-    (a) Analyze simulation results and generate plots.
-    """
-    for config_ in _expand_paths(configs):
-        path = Path(config_)
-        config = read_config(path)
-        load_print(f"Analyzing simulation {config.name}...")
-        try:
-            results = analyze_simulation(config, save_results=True)
-            if "error" in results:
-                error_print(f"Analysis failed: {results['error']}")
-            else:
-                done_print(f"Analysis completed for {config.name}")
-        except Exception as e:
-            error_print(f"Analysis failed: {e}")
 
 
 def _expand_paths(paths: list[str]) -> list[Path]:

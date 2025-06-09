@@ -3,7 +3,6 @@
 import * as api from '../api.js';
 import { createConfigStore } from '../stores/configStore.js';
 import { createConfigViewer } from '../components/configViewer.js';
-import { createBreakwaterDiagram } from '../components/breakwaterDiagram.js';
 import { icon } from '../utils.js';
 
 export function createConfigDetailView(configName) {
@@ -39,7 +38,6 @@ export function createConfigDetailView(configName) {
 </div>
 
 <div class="config-detail">
-  <div id="diagram" class="panel"></div>
   <div id="analysis" class="panel">
     <h3>Analysis Results</h3>
     <p style="color: var(--subtext0); text-align: center; padding: 40px;">
@@ -204,10 +202,6 @@ export function createConfigDetailView(configName) {
         document.getElementById('config-viewer'),
         configStore,
         isEditing
-      ),
-      createBreakwaterDiagram(
-        document.getElementById('diagram'),
-        configStore
       ),
     ];
 

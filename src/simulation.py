@@ -9,7 +9,6 @@ import numpy as np
 import tqdm
 from jinja2 import Template
 
-from .analysis import analyze_simulation
 from .config import Config
 from .utils.paths import root_dir
 from .utils.print import done_print, error_print, load_print
@@ -33,24 +32,13 @@ def run_simulation(config: Config) -> None:
 
     # Create all necessary files in swash subdirectory
     _create_bathymetry_file(config, simulation_dir=swash_dir)
-    if config.breakwater.enable:
-        _create_porosity_file(config, simulation_dir=swash_dir)
-        _create_structure_height_file(config, simulation_dir=swash_dir)
-    if config.vegetation.enable:
-        _create_vegetation_file(config, simulation_dir=swash_dir)
     _create_input_file(config, simulation_dir=swash_dir, template_dir=template_dir)
 
     # Execute SWASH
     success = _execute_swash(config, simulation_dir=swash_dir)
 
-    # Run analysis if simulation succeeded
     if success:
-        load_print("Running analysis...")
-        try:
-            analyze_simulation(config, save_results=True)
-            done_print("Analysis completed and saved")
-        except Exception as e:
-            error_print(f"Analysis failed: {e}")
+        done_print("Simulation completed successfully")
 
 
 ############
@@ -58,27 +46,6 @@ def run_simulation(config: Config) -> None:
 ############
 
 
-def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> None:
-    """Create structure height file for the breakwater.
-
-    The structure height file contains the height of the porous structure
-    at each grid point.
-    """
-    # Create grid points
-    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-
-    # Initialize structure height array
-    structure_height = np.zeros_like(x)
-
-    # Set structure height within breakwater extent
-    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
-        x <= config.breakwater_end_position
-    )
-    structure_height[breakwater_mask] = config.breakwater.crest_height
-
-    # Write to file
-    output_path = simulation_dir / "structure_height.txt"
-    np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
 def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
@@ -98,99 +65,8 @@ def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
     np.savetxt(output_path, bottom, fmt="%.3f")
 
 
-def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
-    """Create porosity file for the breakwater.
-
-    The porosity file contains porosity values at each grid point.
-    Porosity is set to the breakwater porosity within the breakwater extent,
-    and 0.0 elsewhere.
-    """
-    # Create grid points
-    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-
-    # Initialize porosity array (0 = no porosity/solid)
-    porosity = np.zeros_like(x)
-
-    # Set porosity within breakwater extent
-    breakwater_mask = (x >= config.numeric.breakwater_start_position) & (
-        x <= config.breakwater_end_position
-    )
-    porosity[breakwater_mask] = config.breakwater.porosity
-
-    # Write to file
-    output_path = simulation_dir / "porosity.txt"
-    np.savetxt(output_path, porosity, fmt="%.3f")
 
 
-def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
-    """Create vegetation density file.
-
-    The vegetation file contains the number of plant stems per unit area
-    at each grid point. Vegetation is placed only on the breakwater crest.
-    For two vegetation types, the spatial distribution is handled via the
-    density file based on the distribution pattern.
-    """
-    # Create grid points
-    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-
-    # Initialize vegetation density array
-    vegetation_density = np.zeros_like(x)
-
-    if config.vegetation.enable and config.breakwater.enable:
-        # Calculate breakwater geometry to find crest locations
-        breakwater_start = config.numeric.breakwater_start_position
-        breakwater_end = config.breakwater_end_position
-        crest_height = config.breakwater.crest_height
-        slope = config.breakwater.slope
-
-        # Calculate crest start and end positions
-        # Slope distance from base to crest: height * slope
-        slope_distance = crest_height * slope
-        crest_start = breakwater_start + slope_distance
-        crest_end = breakwater_end - slope_distance
-
-        # Get crest mask
-        crest_mask = (x >= crest_start) & (x <= crest_end)
-        crest_indices = np.where(crest_mask)[0]
-
-        if len(crest_indices) > 0 and config.vegetation.other_type is not None:
-            # Two vegetation types with spatial distribution
-            n_crest_points = len(crest_indices)
-            other_type = config.vegetation.other_type  # Type assertion for type checker
-
-            if config.vegetation.distribution == "half":
-                # Split crest into two halves
-                split_idx = int(n_crest_points * config.vegetation.type_fraction)
-                # Type 1 on seaward side, Type 2 on leeward side
-                for i, idx in enumerate(crest_indices):
-                    if i < split_idx:
-                        vegetation_density[idx] = config.vegetation.type.plant_density
-                    else:
-                        vegetation_density[idx] = other_type.plant_density
-
-            elif config.vegetation.distribution == "alternating":
-                # Alternate between types
-                for i, idx in enumerate(crest_indices):
-                    if i % 2 == 0:
-                        vegetation_density[idx] = config.vegetation.type.plant_density
-                    else:
-                        vegetation_density[idx] = other_type.plant_density
-
-            elif config.vegetation.distribution == "custom":
-                # For custom distribution, use type_fraction as a probability
-                # This could be extended to read from a file in the future
-                for idx in crest_indices:
-                    if np.random.random() < config.vegetation.type_fraction:
-                        vegetation_density[idx] = config.vegetation.type.plant_density
-                    else:
-                        vegetation_density[idx] = other_type.plant_density
-        else:
-            # Single vegetation type
-            vegetation_density[crest_mask] = config.vegetation.type.plant_density
-
-    # Write to file
-    output_path = simulation_dir / "vegetation_density.txt"
-    np.savetxt(output_path, vegetation_density, fmt="%.1f")
 
 
 def _create_input_file(
@@ -215,9 +91,7 @@ def _create_input_file(
         "name": config.name,
         "project_nr": project_nr,
         "grid": config.grid,
-        "breakwater": config.breakwater,
         "water": config.water,
-        "vegetation": config.vegetation,
         "numeric": config.numeric,
         "simulation_duration": config.simulation_duration,
         "enumerate": enumerate,  # Make enumerate available in template

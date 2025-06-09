@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Literal
 
 import pydantic
 import ruamel.yaml
@@ -36,37 +35,6 @@ class ComputationalGridConfig(pydantic.BaseModel):
     _hash_config = utils.validators.hash_config()
 
 
-class BreakwaterConfig(pydantic.BaseModel):
-    hash: str = pydantic.Field(
-        default="",
-        description="Hash of the configuration (automatically generated)",
-    )
-
-    enable: bool = pydantic.Field(
-        default=True, description="Enable breakwater in the simulation"
-    )
-
-    # geometry
-    crest_height: float = pydantic.Field(
-        default=2.0, description="Height of the crest from the floor (m)"
-    )
-    crest_width: float = pydantic.Field(
-        default=2.0, description="Width of the crest (m)"
-    )
-    slope: float = pydantic.Field(
-        default=2.0, description="Slope of the breakwater sides (H:V ratio)"
-    )
-    porosity: float = pydantic.Field(
-        default=0.4, description="Porosity of the breakwater (0-1)"
-    )
-    stone_density: float = pydantic.Field(
-        default=2600, description="Density of the stones (kg/m^3)"
-    )
-    armour_dn50: float = pydantic.Field(
-        default=1.150, description="Median diameter of armour stones (m)"
-    )
-
-    _hash_config = utils.validators.hash_config()
 
 
 class WaterConfig(pydantic.BaseModel):
@@ -94,63 +62,6 @@ class WaterConfig(pydantic.BaseModel):
     _hash_config = utils.validators.hash_config()
 
 
-class VegetationType(pydantic.BaseModel):
-    """Configuration for a single vegetation type."""
-
-    plant_height: float = pydantic.Field(
-        default=0.5, description="Height of plants (m)"
-    )
-    plant_diameter: float = pydantic.Field(
-        default=0.01, description="Diameter of plant stems (m)"
-    )
-    plant_density: float = pydantic.Field(
-        default=1.0, description="Number of plant stems per square meter"
-    )
-    drag_coefficient: float = pydantic.Field(
-        default=1.0, description="Drag coefficient for vegetation"
-    )
-
-
-class VegetationConfig(pydantic.BaseModel):
-    hash: str = pydantic.Field(
-        default="",
-        description="Hash of the configuration (automatically generated)",
-    )
-
-    enable: bool = pydantic.Field(
-        default=False, description="Enable vegetation on the breakwater crest"
-    )
-
-    # Main vegetation type
-    type: VegetationType = pydantic.Field(
-        default_factory=lambda: VegetationType(
-            plant_height=0.5,
-            plant_diameter=0.02,
-            plant_density=50.0,
-            drag_coefficient=1.2,
-        ),
-        description="Primary vegetation type",
-    )
-
-    # Optional second vegetation type
-    other_type: VegetationType | None = pydantic.Field(
-        default=None, description="Optional second vegetation type"
-    )
-
-    # Spatial distribution (only used if other_type is defined)
-    distribution: Literal["half", "alternating", "custom"] = pydantic.Field(
-        default="half",
-        description="Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'",
-    )
-
-    type_fraction: float = pydantic.Field(
-        default=0.5,
-        description="Fraction of crest width occupied by primary vegetation type (0-1)",
-        ge=0.0,
-        le=1.0,
-    )
-
-    _hash_config = utils.validators.hash_config()
 
 
 class NumericConfig(pydantic.BaseModel):
@@ -166,10 +77,6 @@ class NumericConfig(pydantic.BaseModel):
         description="Initial time step (s) - adaptive time stepping will adjust this",
     )
 
-    # breakwater position
-    breakwater_start_position: float = pydantic.Field(
-        default=100.0, description="Start position of the breakwater (m)"
-    )
 
     # gauge positions in x (m)
     wave_gauge_positions: list[float] = pydantic.Field(
@@ -196,16 +103,8 @@ class Config(pydantic.BaseModel):
         default_factory=ComputationalGridConfig,
         description="Computational grid configuration",
     )
-    breakwater: BreakwaterConfig = pydantic.Field(
-        default_factory=BreakwaterConfig,
-        description="Breakwater configuration",
-    )
     water: WaterConfig = pydantic.Field(
         default_factory=WaterConfig, description="Water and wave configuration"
-    )
-    vegetation: VegetationConfig = pydantic.Field(
-        default_factory=VegetationConfig,
-        description="Vegetation configuration",
     )
     numeric: NumericConfig = pydantic.Field(
         default_factory=NumericConfig, description="Numerical parameters"
@@ -218,17 +117,6 @@ class Config(pydantic.BaseModel):
         """Calculate total simulation duration based on number of waves and period."""
         return self.numeric.n_waves * self.water.wave_period
 
-    @property
-    def breakwater_end_position(self) -> float:
-        """Calculate breakwater end position based on start position, crest width, and slope."""
-        if not self.breakwater.enable:
-            return self.numeric.breakwater_start_position
-        
-        # Total base width = crest width + 2 * (height * slope)
-        base_width = self.breakwater.crest_width + 2 * (
-            self.breakwater.crest_height * self.breakwater.slope
-        )
-        return self.numeric.breakwater_start_position + base_width
 
 
 ############
@@ -283,12 +171,8 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
     # Add top-level comments
     config_.yaml_add_eol_comment("hash of the config (automatically modified)", "hash")
     config_.yaml_add_eol_comment("computational grid configuration", "grid")
-    config_.yaml_add_eol_comment("configuration for the breakwater", "breakwater")
     config_.yaml_add_eol_comment(
-        "configuration for the water in the channel or bay", "water"
-    )
-    config_.yaml_add_eol_comment(
-        "configuration for the vegetation on the breakwater", "vegetation"
+        "configuration for the water in the channel", "water"
     )
     config_.yaml_add_eol_comment(
         "configuration for the numerical parameters",
@@ -299,14 +183,8 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
     config_["grid"] = ruamel.yaml.CommentedMap(config.grid.model_dump())
     _add_field_comments(config.grid, config_["grid"])
 
-    config_["breakwater"] = ruamel.yaml.CommentedMap(config.breakwater.model_dump())
-    _add_field_comments(config.breakwater, config_["breakwater"])
-
     config_["water"] = ruamel.yaml.CommentedMap(config.water.model_dump())
     _add_field_comments(config.water, config_["water"])
-
-    config_["vegetation"] = ruamel.yaml.CommentedMap(config.vegetation.model_dump())
-    _add_field_comments(config.vegetation, config_["vegetation"])
 
     config_["numeric"] = ruamel.yaml.CommentedMap(config.numeric.model_dump())
     _add_field_comments(config.numeric, config_["numeric"])

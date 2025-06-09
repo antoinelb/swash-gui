@@ -1,39 +1,19 @@
-hash: b11a2f3b  # hash of the config (automatically modified)
+hash: a83d8099  # hash of the config (automatically modified)
 grid: # computational grid configuration
   hash: f144f5d3  # Hash of the configuration (automatically generated)
   length: 112.0 # Length of the computational domain (m)
   nx_cells: 500 # Number of cells in x-direction
   n_layers: 2 # Number of vertical layers (2-3 recommended for efficiency)
-breakwater: # configuration for the breakwater
-  hash: 43d2008c  # Hash of the configuration (automatically generated)
-  crest_height: 2.0 # Height of the crest from the floor (m)
-  crest_width: 3.0 # Width of the crest (m)
-  slope: 1.75 # Slope of the breakwater sides (H:V ratio)
-  porosity: 0.4 # Porosity of the breakwater (0-1)
-  stone_density: 2600.0 # Density of the stones (kg/m^3)
-  armour_dn50: 1.15 # Median diameter of armour stones (m)
-water: # configuration for the water in the channel or bay
+water: # configuration for the water in the channel
   hash: c1fefe57  # Hash of the configuration (automatically generated)
   water_level: 2.0 # Still water level (m)
   water_density: 1000.0 # Density of water (kg/m^3)
   wave_height: 0.6 # Wave height for regular waves (m)
   wave_period: 5.0 # Wave period for regular waves (s)
-vegetation: # configuration for the vegetation on the breakwater
-  hash: a83879de  # Hash of the configuration (automatically generated)
-  enable: true # Enable vegetation on the breakwater crest
-  type: # Primary vegetation type
-    plant_height: 0.5
-    plant_diameter: 0.02
-    plant_density: 50.0
-    drag_coefficient: 1.2
-  other_type: # Optional second vegetation type
-  distribution: half # Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'
-  type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
 numeric: # configuration for the numerical parameters
-  hash: e7ee194c  # Hash of the configuration (automatically generated)
+  hash: '374369e7'  # Hash of the configuration (automatically generated)
   n_waves: 50 # Number of waves to simulate
   time_step: 0.05 # Initial time step (s) - adaptive time stepping will adjust this
-  breakwater_start_position: 80.0 # Start position of the breakwater (m)
   wave_gauge_positions: # X-positions of wave gauges (m)
   - 20.0
   - 60.0

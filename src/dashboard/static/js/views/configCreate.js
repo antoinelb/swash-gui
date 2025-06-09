@@ -18,33 +18,15 @@ export function createConfigCreateView() {
       nx_cells: 1000,
       n_layers: 10
     },
-    breakwater: {
-      crest_height: 2.0,
-      crest_width: 5.0,
-      slope: 2.0,
-      porosity: 0.4,
-      stone_density: 2650.0,
-      armour_dn50: 0.3,
-      filter_dn50: 0.1,
-      core_dn50: 0.05
-    },
     water: {
       water_level: 5.0,
       water_density: 1025.0,
       wave_height: 2.0,
       wave_period: 8.0
     },
-    vegetation: {
-      enable: false,
-      plant_height: 0.5,
-      plant_diameter: 0.01,
-      plant_density: 100.0,
-      drag_coefficient: 1.0
-    },
     numeric: {
       n_waves: 10,
       time_step: 0.01,
-      breakwater_start_position: 40.0,
       output_interval: 1.0,
       wave_gauge_positions: [20.0, 30.0, 70.0, 80.0]
     }

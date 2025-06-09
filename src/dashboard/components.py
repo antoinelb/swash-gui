@@ -43,74 +43,6 @@ def create_config_display(config: config_module.Config, editable: bool = False):
             ],
         ),
         create_section(
-            "Breakwater",
-            [
-                create_field(
-                    "Enable Breakwater",
-                    config.breakwater.enable,
-                    "breakwater.enable",
-                    editable,
-                    "boolean",
-                ),
-                create_field(
-                    "Start Position (m)",
-                    config.numeric.breakwater_start_position,
-                    "numeric.breakwater_start_position",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "End Position (m)",
-                    config.breakwater_end_position,
-                    "breakwater.end_position",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Crest Height (m)",
-                    config.breakwater.crest_height,
-                    "breakwater.crest_height",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Crest Width (m)",
-                    config.breakwater.crest_width,
-                    "breakwater.crest_width",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Porosity",
-                    config.breakwater.porosity,
-                    "breakwater.porosity",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Stone Density (kg/m³)",
-                    config.breakwater.stone_density,
-                    "breakwater.stone_density",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Armour Dn50 (m)",
-                    config.breakwater.armour_dn50,
-                    "breakwater.armour_dn50",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Slope",
-                    config.breakwater.slope,
-                    "breakwater.slope",
-                    editable,
-                    "number",
-                ),
-            ],
-        ),
-        create_section(
             "Water & Waves",
             [
                 create_field(
@@ -142,94 +74,6 @@ def create_config_display(config: config_module.Config, editable: bool = False):
                     "number",
                 ),
             ],
-        ),
-        create_section(
-            "Vegetation",
-            [
-                create_field(
-                    "Enable Vegetation",
-                    config.vegetation.enable,
-                    "vegetation.enable",
-                    editable,
-                    "boolean",
-                ),
-                create_field(
-                    "Primary Type - Height (m)",
-                    config.vegetation.type.plant_height,
-                    "vegetation.type.plant_height",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Primary Type - Diameter (m)",
-                    config.vegetation.type.plant_diameter,
-                    "vegetation.type.plant_diameter",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Primary Type - Density (/m²)",
-                    config.vegetation.type.plant_density,
-                    "vegetation.type.plant_density",
-                    editable,
-                    "number",
-                ),
-                create_field(
-                    "Primary Type - Drag Coefficient",
-                    config.vegetation.type.drag_coefficient,
-                    "vegetation.type.drag_coefficient",
-                    editable,
-                    "number",
-                ),
-            ]
-            + (
-                []
-                if config.vegetation.other_type is None
-                else [
-                    create_field(
-                        "Secondary Type - Height (m)",
-                        config.vegetation.other_type.plant_height,
-                        "vegetation.other_type.plant_height",
-                        editable,
-                        "number",
-                    ),
-                    create_field(
-                        "Secondary Type - Diameter (m)",
-                        config.vegetation.other_type.plant_diameter,
-                        "vegetation.other_type.plant_diameter",
-                        editable,
-                        "number",
-                    ),
-                    create_field(
-                        "Secondary Type - Density (/m²)",
-                        config.vegetation.other_type.plant_density,
-                        "vegetation.other_type.plant_density",
-                        editable,
-                        "number",
-                    ),
-                    create_field(
-                        "Secondary Type - Drag Coefficient",
-                        config.vegetation.other_type.drag_coefficient,
-                        "vegetation.other_type.drag_coefficient",
-                        editable,
-                        "number",
-                    ),
-                    create_field(
-                        "Distribution Pattern",
-                        config.vegetation.distribution,
-                        "vegetation.distribution",
-                        editable,
-                        "text",
-                    ),
-                    create_field(
-                        "Primary Type Fraction",
-                        config.vegetation.type_fraction,
-                        "vegetation.type_fraction",
-                        editable,
-                        "number",
-                    ),
-                ]
-            ),
         ),
         create_section(
             "Numerical Parameters",
@@ -331,22 +175,6 @@ def create_array_field(label: str, values: list, field_id: str, editable: bool):
     )
 
 
-def create_breakwater_diagram_placeholder():
-    """Create a placeholder for the breakwater diagram."""
-    return html.Div(
-        [
-            html.H3("Breakwater Diagram"),
-            html.Div(
-                [
-                    html.P(
-                        "📊 Breakwater visualization will be implemented here",
-                        className="placeholder-text",
-                    )
-                ],
-                className="placeholder-container",
-            ),
-        ]
-    )
 
 
 def create_results_placeholder():

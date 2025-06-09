@@ -2,116 +2,107 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-This is a SWASH (Simulating WAves till SHore) simulation framework for modeling breakwaters in wave channels and Baie-des-Bacon. The project provides a Python-based CLI and dashboard for configuring, running, and visualizing coastal engineering simulations.
+## Commands
 
-## Key Commands
-
-### Development Setup
+### Development Environment
 ```bash
-# Install dependencies (requires Python 3.13+)
+# Install dependencies
 uv sync
 
-# Format code
-isort src/
-black src/
+# Run with development dependencies
+uv sync --group dev
+```
 
-# Lint code
-ruff check src/
-ty check src/
+### Testing and Code Quality
+```bash
+# Run tests
+uv run pytest
 
-# Run type checking
-ty check src/
+# Code formatting and linting
+uv run black src/
+uv run isort src/
+uv run ruff check src/
+
+# Type checking
+uv run python -m py.typed  # If available
 ```
 
 ### CLI Usage
 ```bash
-# Create/update experiment configuration
-cli create config/experiment.yml
-# or shorthand
-c create config/experiment.yml
+# Main CLI entry points
+python -m src.cli --help
+uv run swash-gui --help     # Installed script
+uv run swg --help           # Short alias
 
-# Run simulations (supports glob patterns)
-cli run config/*.yml
-# or shorthand
-c run config/*.yml
+# Common operations
+python -m src.cli create config/experiment.yml    # Create config
+python -m src.cli run config/experiment.yml       # Run simulation
+python -m src.cli dashboard                       # Launch web UI
+python -m src.cli analyze config/experiment.yml   # Analyze results
+python -m src.cli clean                           # Clean orphaned sims
+```
 
-# Launch interactive dashboard
-cli dashboard
-# or shorthand
-c dashboard
+### Dashboard Development
+```bash
+# Start dashboard server
+python -m src.cli dashboard
+# Runs on http://localhost:8000 with hot reload
 ```
 
 ## Architecture
 
-### Configuration System
-The project uses a hierarchical Pydantic-based configuration system:
-- `Config` (root) contains `BreakwaterConfig`, `WaterConfig`, `VegetationConfig`, `NumericConfig`
-- Configurations are validated and hashed for reproducibility
-- YAML files with comments are generated using ruamel.yaml
+### Core Components
 
-### Template System
-SWASH input files are generated using Jinja2 templates:
-- Template location: `templates/INPUT`
-- Variables are injected from the configuration models
-- Generated files are placed in `simulations/<name>_<hash>/`
+**Configuration System (`src/config.py`)**
+- Pydantic models for type-safe configuration management
+- YAML-based config files with automatic validation
+- Hash-based simulation directory naming for reproducibility
+- Modular configs: Grid, Breakwater, Water, Vegetation, Numeric
 
-### Key Modules
-- `src/cli.py`: Typer-based CLI with create/run/dashboard commands
-- `src/config.py`: Pydantic models for configuration validation
-- `src/simulation.py`: Simulation execution logic (in development)
-- `src/dashboard/`: Dash-based web interface (in development)
+**Simulation Engine (`src/simulation.py`)**
+- Jinja2 template rendering for SWASH INPUT files
+- Automatic generation of bathymetry, porosity, and vegetation files
+- SWASH process execution with real-time progress monitoring
+- Post-simulation analysis integration
 
-## Development Notes
+**Web Dashboard (`src/dashboard/`)**
+- Starlette backend with vanilla JS frontend
+- SPA architecture with client-side routing
+- Real-time breakwater visualization with cross-section diagrams
+- RESTful API for config management and simulation control
 
-### Code Style
-- Line length: 79 characters (enforced by Black)
-- Import sorting: Black-compatible profile
-- Type hints are used throughout
+**CLI Interface (`src/cli.py`)**
+- Typer-based CLI with short aliases (c, r, d, cc, a)
+- Glob pattern support for batch operations
+- Orphaned simulation cleanup functionality
 
-### Output Structure
-Simulations create directories with format: `simulations/<name>_<hash>/`
-- Each simulation is uniquely identified by configuration hash
-- Results are cached based on configuration content
+### Data Flow
 
-### SWASH Integration
-- User manual: `docs/swash_manual.md`
-- Input templates use Jinja2 syntax for variable substitution
-- The framework handles SWASH execution and output parsing
-- IMPORTANT: First refer to `@docs/swash_manual/swash_1d_config_summary.md` when working with swash
+1. **Configuration**: YAML files in `config/` define simulation parameters
+2. **Template Processing**: Jinja2 renders SWASH INPUT from `templates/INPUT`
+3. **File Generation**: Creates bathymetry, porosity, vegetation data files
+4. **Simulation**: Executes SWASH in `simulations/<name>_<hash>/swash/`
+5. **Analysis**: Generates plots and results in simulation directory
 
-### Project Documentation
-- `docs/swash_manual.md`: SWASH user manual for reference
-- `docs/overflowing_report.md`: Experimental protocol for hydrodynamic behavior of vegetated breakwaters (in French)
-- `docs/stability_report.md`: Armourstone design analysis for low-crested breakwaters in Baie des Bacon
+### Key Patterns
 
-### Commit Guidelines
-- NEVER mention Claude, Claude Code, or Anthropic in commit messages
+**Hash-based Versioning**: Each config generates a unique hash used for simulation directory naming, ensuring reproducibility and preventing config drift.
 
-### File Format Notes
-- Files ending with .dat are text files and not binary ones
+**Template-driven INPUT Generation**: SWASH input files are generated from Jinja2 templates with access to full configuration objects, enabling complex conditional logic.
 
-### Running the Program
-To run the program, use the following steps:
+**Modular Configuration**: Separate Pydantic models for different simulation aspects allow independent validation and selective updates.
 
-1. Ensure all dependencies are installed:
-```bash
-uv sync
-```
+**Progressive File Creation**: Simulation files are only created when their corresponding features are enabled (e.g., vegetation files only when `vegetation.enable=True`).
 
-2. Create a configuration file for your experiment:
-```bash
-cli create config/my_experiment.yml
-```
+## External Dependencies
 
-3. Run the simulation using the created configuration:
-```bash
-cli run config/my_experiment.yml
-```
+- **SWASH**: Must be installed and available in PATH for simulation execution
+- **Templates**: `templates/INPUT` contains the base SWASH input template
+- **Static Assets**: Dashboard frontend assets in `src/dashboard/static/`
 
-4. Optional: Launch the interactive dashboard to visualize results:
-```bash
-cli dashboard
-```
+## Configuration Management
 
-Note: Use the shorthand `c` instead of `cli` for quicker command entry (e.g., `c run config/my_experiment.yml`).
+Configurations use hierarchical validation with automatic hash generation. When modifying configs:
+- Use the dashboard for guided editing with real-time validation
+- CLI `create` command initializes configs with sensible defaults
+- All changes update the configuration hash, triggering new simulation directories
