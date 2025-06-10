@@ -9,6 +9,7 @@ from starlette.routing import Route
 from src import config as config_module
 from src.simulation import run_simulation
 from src.wavelength import compute_wavelength
+from src.utils.paths import root_dir
 
 CONFIG_DIR = Path("config")
 
@@ -189,6 +190,36 @@ async def calculate_wavelength(request: Request) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=400)
 
 
+async def get_analysis_results(request: Request) -> JSONResponse:
+    """Get analysis results for a configuration."""
+    name = request.path_params["name"]
+    config_path = CONFIG_DIR / f"{name}.yml"
+
+    if not config_path.exists():
+        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+
+    try:
+        # Load config to get hash
+        cfg = config_module.read_config(config_path)
+        simulation_dir = root_dir / "simulations" / f"{cfg.name}_{cfg.hash}"
+        analysis_dir = simulation_dir / "analysis"
+        
+        # Check for the Plotly JSON file
+        plot_file = analysis_dir / "water_levels_and_x_velocity.json"
+        
+        if not plot_file.exists():
+            return JSONResponse({"error": "Analysis results not found"}, status_code=404)
+
+        # Load plot data
+        import json
+        with open(plot_file, 'r') as f:
+            plot_data = json.load(f)
+
+        return JSONResponse({"plot_data": plot_data})
+    except Exception as e:
+        print(f"Error getting analysis results for {name}: {e}")
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 def get_api_routes() -> List[Route]:
@@ -200,5 +231,6 @@ def get_api_routes() -> List[Route]:
         Route("/configs/{name}", update_config, methods=["PUT"]),
         Route("/configs/{name}", delete_config, methods=["DELETE"]),
         Route("/simulate/{name}", simulate_config, methods=["POST"]),
+        Route("/analysis/{name}", get_analysis_results, methods=["GET"]),
         Route("/wavelength", calculate_wavelength, methods=["POST"]),
     ]

@@ -41,19 +41,11 @@ def run_simulation(config: Config) -> None:
         done_print("Simulation completed successfully")
         
         # Run analysis if simulation succeeded
-        load_print("Generating wave energy analysis...")
+        load_print("Generating wave analysis...")
         try:
             from .analysis import analyze_simulation
-            analysis_results = analyze_simulation(simulation_dir, config)
-            
-            if "error" in analysis_results:
-                error_print(f"Analysis failed: {analysis_results['error']}")
-            else:
-                plot_file = analysis_results.get('plot_file', '')
-                if plot_file:
-                    done_print(f"Analysis complete - wave envelope plot saved to analysis/")
-                else:
-                    done_print("Analysis complete")
+            analyze_simulation(simulation_dir, config)
+            done_print("Analysis complete - results saved to analysis/")
         except Exception as e:
             error_print(f"Analysis failed: {e}")
 
