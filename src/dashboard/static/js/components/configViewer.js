@@ -65,6 +65,33 @@ export function createConfigViewer(container, configStore, editable = false) {
     }
   };
 
+  const createSelectField = (label, value, path, options) => {
+    const fieldId = path.replace(/\./g, '-');
+
+    if (editable) {
+      const optionElements = options.map(opt => 
+        `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
+      ).join('');
+      
+      return `
+<div class="field">
+  <label for="${fieldId}">${label}</label>
+  <select id="${fieldId}" data-path="${path}">
+    ${optionElements}
+  </select>
+</div>
+`;
+    } else {
+      const selectedOption = options.find(opt => opt.value === value);
+      return `
+<div class="field">
+  <label>${label}</label>
+  <span class="field-value">${selectedOption ? selectedOption.label : value}</span>
+</div>
+`;
+    }
+  };
+
   let isInitialized = false;
 
   const render = (config) => {
@@ -91,6 +118,55 @@ export function createConfigViewer(container, configStore, editable = false) {
     ${createField('Wave Period (s)', config.water.wave_period, 'water.wave_period')}
   </section>
 
+  <section>
+    <h3>Breakwater</h3>
+    ${createCheckbox('Enable Breakwater', config.breakwater.enable, 'breakwater.enable')}
+    ${config.breakwater.enable || editable ? `
+    ${createField('Crest Height (m)', config.breakwater.crest_height, 'breakwater.crest_height')}
+    ${createField('Crest Width (m)', config.breakwater.crest_width, 'breakwater.crest_width')}
+    ${createField('Slope (H:V)', config.breakwater.slope, 'breakwater.slope')}
+    ${createField('Porosity', config.breakwater.porosity, 'breakwater.porosity')}
+    ${createField('Stone Density (kg/m³)', config.breakwater.stone_density, 'breakwater.stone_density')}
+    ${createField('Armour Dn50 (m)', config.breakwater.armour_dn50, 'breakwater.armour_dn50')}
+    ${createField('Start Position (m)', config.breakwater.breakwater_start_position, 'breakwater.breakwater_start_position')}
+    ` : ''}
+  </section>
+
+  <section>
+    <h3>Vegetation</h3>
+    ${createCheckbox('Enable Vegetation', config.vegetation.enable, 'vegetation.enable')}
+    
+    ${config.vegetation.enable || editable ? `
+    <h4>Primary Type</h4>
+    ${createField('Plant Height (m)', config.vegetation.type?.plant_height || 0, 'vegetation.type.plant_height')}
+    ${createField('Plant Diameter (m)', config.vegetation.type?.plant_diameter || 0, 'vegetation.type.plant_diameter')}
+    ${createField('Plant Density (/m²)', config.vegetation.type?.plant_density || 0, 'vegetation.type.plant_density')}
+    ${createField('Drag Coefficient', config.vegetation.type?.drag_coefficient || 0, 'vegetation.type.drag_coefficient')}
+    
+    ${config.vegetation.other_type ? `
+    ${editable ? `<div class="vegetation-controls">
+      <button type="button" class="btn btn-danger btn-sm" data-action="remove-vegetation-type">Remove Secondary Type</button>
+    </div>` : ''}
+    <h4>Secondary Type</h4>
+    ${createField('Plant Height (m)', config.vegetation.other_type.plant_height, 'vegetation.other_type.plant_height')}
+    ${createField('Plant Diameter (m)', config.vegetation.other_type.plant_diameter, 'vegetation.other_type.plant_diameter')}
+    ${createField('Plant Density (/m²)', config.vegetation.other_type.plant_density, 'vegetation.other_type.plant_density')}
+    ${createField('Drag Coefficient', config.vegetation.other_type.drag_coefficient, 'vegetation.other_type.drag_coefficient')}
+    
+    <h4>Distribution</h4>
+    ${createSelectField('Distribution Pattern', config.vegetation.distribution, 'vegetation.distribution', [
+      { value: 'half', label: 'Half (Seaward/Leeward)' },
+      { value: 'alternating', label: 'Alternating Pattern' },
+      { value: 'custom', label: 'Custom Proportion' }
+    ])}
+    ${createField('Primary Type Fraction', config.vegetation.type_fraction, 'vegetation.type_fraction')}
+    ` : editable ? `
+    <div class="vegetation-controls">
+      <button type="button" class="btn btn-primary btn-sm" data-action="add-vegetation-type">Add Secondary Type</button>
+    </div>
+    ` : ''}
+    ` : ''}
+  </section>
 
   <section>
     <h3>Numerical Parameters</h3>
@@ -131,12 +207,37 @@ export function createConfigViewer(container, configStore, editable = false) {
 
     // Grid parameters are fixed - no need to update
 
-
     updateField('water.water_level', config.water.water_level);
     updateField('water.water_density', config.water.water_density);
     updateField('water.wave_height', config.water.wave_height);
     updateField('water.wave_period', config.water.wave_period);
 
+    updateField('breakwater.enable', config.breakwater.enable);
+    updateField('breakwater.crest_height', config.breakwater.crest_height);
+    updateField('breakwater.crest_width', config.breakwater.crest_width);
+    updateField('breakwater.slope', config.breakwater.slope);
+    updateField('breakwater.porosity', config.breakwater.porosity);
+    updateField('breakwater.stone_density', config.breakwater.stone_density);
+    updateField('breakwater.armour_dn50', config.breakwater.armour_dn50);
+    updateField('breakwater.breakwater_start_position', config.breakwater.breakwater_start_position);
+
+    updateField('vegetation.enable', config.vegetation.enable);
+    
+    // Primary vegetation type
+    updateField('vegetation.type.plant_height', config.vegetation.type?.plant_height);
+    updateField('vegetation.type.plant_diameter', config.vegetation.type?.plant_diameter);
+    updateField('vegetation.type.plant_density', config.vegetation.type?.plant_density);
+    updateField('vegetation.type.drag_coefficient', config.vegetation.type?.drag_coefficient);
+    
+    // Secondary vegetation type
+    if (config.vegetation.other_type) {
+      updateField('vegetation.other_type.plant_height', config.vegetation.other_type.plant_height);
+      updateField('vegetation.other_type.plant_diameter', config.vegetation.other_type.plant_diameter);
+      updateField('vegetation.other_type.plant_density', config.vegetation.other_type.plant_density);
+      updateField('vegetation.other_type.drag_coefficient', config.vegetation.other_type.drag_coefficient);
+      updateField('vegetation.distribution', config.vegetation.distribution);
+      updateField('vegetation.type_fraction', config.vegetation.type_fraction);
+    }
 
     updateField('numeric.n_waves', config.numeric.n_waves);
     // Time step and output interval are fixed - no need to update
@@ -176,6 +277,44 @@ export function createConfigViewer(container, configStore, editable = false) {
         const path = e.target.dataset.path;
         const value = e.target.checked;
         configStore.updateConfig(path, value);
+      });
+    });
+
+    // Select dropdowns
+    container.querySelectorAll('select').forEach(select => {
+      select.addEventListener('change', (e) => {
+        const path = e.target.dataset.path;
+        const value = e.target.value;
+        configStore.updateConfig(path, value);
+      });
+    });
+
+    // Vegetation control buttons
+    container.querySelectorAll('[data-action]').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const action = e.target.dataset.action;
+        
+        if (action === 'add-vegetation-type') {
+          // Add a default secondary vegetation type
+          const defaultSecondaryType = {
+            plant_height: 0.3,
+            plant_diameter: 0.015,
+            plant_density: 50.0,
+            drag_coefficient: 1.0
+          };
+          configStore.updateConfig('vegetation.other_type', defaultSecondaryType);
+          configStore.updateConfig('vegetation.distribution', 'half');
+          configStore.updateConfig('vegetation.type_fraction', 0.5);
+          // Re-render to show new fields
+          isInitialized = false;
+          render(configStore.getConfig());
+        } else if (action === 'remove-vegetation-type') {
+          // Remove secondary vegetation type
+          configStore.updateConfig('vegetation.other_type', null);
+          // Re-render to hide secondary type fields
+          isInitialized = false;
+          render(configStore.getConfig());
+        }
       });
     });
   };

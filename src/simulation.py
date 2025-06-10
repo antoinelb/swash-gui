@@ -35,6 +35,8 @@ def run_simulation(config: Config) -> None:
     if config.breakwater.enable:
         _create_porosity_file(config, simulation_dir=swash_dir)
         _create_structure_height_file(config, simulation_dir=swash_dir)
+        if config.vegetation.enable:
+            _create_vegetation_file(config, simulation_dir=swash_dir)
     _create_input_file(config, simulation_dir=swash_dir, template_dir=template_dir)
 
     # Execute SWASH
@@ -110,6 +112,58 @@ def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> No
     np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
+def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
+    """Create vegetation density file for the breakwater crest.
+    
+    The vegetation density file contains the number of plant stems per square meter
+    at each grid point. Vegetation is only placed on the breakwater crest.
+    """
+    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
+    vegetation_density = np.zeros_like(x)
+    
+    # Calculate crest boundaries (top of breakwater)
+    crest_start = config.breakwater.breakwater_start_position + config.breakwater.crest_height * config.breakwater.slope
+    crest_end = crest_start + config.breakwater.crest_width
+    
+    # Create mask for crest area
+    crest_mask = (x >= crest_start) & (x <= crest_end)
+    
+    if config.vegetation.other_type is not None:
+        # Two vegetation types with spatial distribution
+        if config.vegetation.distribution == "half":
+            # Seaward half gets type 1, leeward half gets type 2
+            crest_mid = (crest_start + crest_end) / 2
+            type1_mask = crest_mask & (x <= crest_mid)
+            type2_mask = crest_mask & (x > crest_mid)
+            vegetation_density[type1_mask] = config.vegetation.type.plant_density
+            vegetation_density[type2_mask] = config.vegetation.other_type.plant_density
+            
+        elif config.vegetation.distribution == "alternating":
+            # Alternating pattern based on type_fraction
+            crest_indices = np.where(crest_mask)[0]
+            if len(crest_indices) > 0:
+                pattern_length = max(1, int(len(crest_indices) * config.vegetation.type_fraction))
+                for i, idx in enumerate(crest_indices):
+                    if (i // pattern_length) % 2 == 0:
+                        vegetation_density[idx] = config.vegetation.type.plant_density
+                    else:
+                        vegetation_density[idx] = config.vegetation.other_type.plant_density
+                        
+        elif config.vegetation.distribution == "custom":
+            # Use type_fraction to determine proportion
+            crest_indices = np.where(crest_mask)[0]
+            if len(crest_indices) > 0:
+                split_point = int(len(crest_indices) * config.vegetation.type_fraction)
+                vegetation_density[crest_indices[:split_point]] = config.vegetation.type.plant_density
+                vegetation_density[crest_indices[split_point:]] = config.vegetation.other_type.plant_density
+    else:
+        # Single vegetation type
+        vegetation_density[crest_mask] = config.vegetation.type.plant_density
+    
+    output_path = simulation_dir / "vegetation_density.txt"
+    np.savetxt(output_path, vegetation_density, fmt="%.3f")
+
+
 
 
 
@@ -138,6 +192,7 @@ def _create_input_file(
         "grid": config.grid,
         "water": config.water,
         "breakwater": config.breakwater,
+        "vegetation": config.vegetation,
         "numeric": config.numeric,
         "simulation_duration": config.simulation_duration,
         "enumerate": enumerate,  # Make enumerate available in template

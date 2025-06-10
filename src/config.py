@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import pydantic
 import ruamel.yaml
@@ -98,6 +99,65 @@ class BreakwaterConfig(pydantic.BaseModel):
     _hash_config = utils.validators.hash_config()
 
 
+class VegetationType(pydantic.BaseModel):
+    """Configuration for a single vegetation type."""
+    
+    plant_height: float = pydantic.Field(
+        default=0.5, description="Height of plants (m)"
+    )
+    plant_diameter: float = pydantic.Field(
+        default=0.01, description="Diameter of plant stems (m)"
+    )
+    plant_density: float = pydantic.Field(
+        default=1.0, description="Number of plant stems per square meter"
+    )
+    drag_coefficient: float = pydantic.Field(
+        default=1.0, description="Drag coefficient for vegetation"
+    )
+
+
+class VegetationConfig(pydantic.BaseModel):
+    hash: str = pydantic.Field(
+        default="",
+        description="Hash of the configuration (automatically generated)",
+    )
+
+    enable: bool = pydantic.Field(
+        default=False, description="Enable vegetation on the breakwater crest"
+    )
+
+    # Main vegetation type
+    type: VegetationType = pydantic.Field(
+        default_factory=lambda: VegetationType(
+            plant_height=0.5,
+            plant_diameter=0.02,
+            plant_density=50.0,
+            drag_coefficient=1.2,
+        ),
+        description="Primary vegetation type",
+    )
+
+    # Optional second vegetation type
+    other_type: VegetationType | None = pydantic.Field(
+        default=None, description="Optional second vegetation type"
+    )
+
+    # Spatial distribution (only used if other_type is defined)
+    distribution: Literal["half", "alternating", "custom"] = pydantic.Field(
+        default="half",
+        description="Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'",
+    )
+
+    type_fraction: float = pydantic.Field(
+        default=0.5,
+        description="Fraction of crest width occupied by primary vegetation type (0-1)",
+        ge=0.0,
+        le=1.0,
+    )
+
+    _hash_config = utils.validators.hash_config()
+
+
 class NumericConfig(pydantic.BaseModel):
     hash: str = pydantic.Field(
         default="",
@@ -146,6 +206,10 @@ class Config(pydantic.BaseModel):
     breakwater: BreakwaterConfig = pydantic.Field(
         default_factory=BreakwaterConfig,
         description="Water and wave configuration",
+    )
+    vegetation: VegetationConfig = pydantic.Field(
+        default_factory=VegetationConfig,
+        description="Vegetation configuration",
     )
     numeric: NumericConfig = pydantic.Field(
         default_factory=NumericConfig, description="Numerical parameters"
@@ -236,6 +300,9 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
         "breakwater configuration", "breakwater"
     )
     config_.yaml_add_eol_comment(
+        "configuration for the vegetation on the breakwater", "vegetation"
+    )
+    config_.yaml_add_eol_comment(
         "configuration for the numerical parameters",
         "numeric",
     )
@@ -251,6 +318,9 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
         config.breakwater.model_dump()
     )
     _add_field_comments(config.breakwater, config_["breakwater"])
+
+    config_["vegetation"] = ruamel.yaml.CommentedMap(config.vegetation.model_dump())
+    _add_field_comments(config.vegetation, config_["vegetation"])
 
     config_["numeric"] = ruamel.yaml.CommentedMap(config.numeric.model_dump())
     _add_field_comments(config.numeric, config_["numeric"])

@@ -1,4 +1,4 @@
-hash: 3a5aead8  # hash of the config (automatically modified)
+hash: 3c9618ce  # hash of the config (automatically modified)
 grid: # computational grid configuration
   hash: 44136fa3  # Hash of the configuration (automatically generated)
 water: # configuration for the water in the channel
@@ -17,6 +17,21 @@ breakwater: # breakwater configuration
   stone_density: 2600.0 # Density of the stones (kg/m^3)
   armour_dn50: 1.15 # Median diameter of armour stones (m)
   breakwater_start_position: 70.0 # Start position of the breakwater (m)
+vegetation: # configuration for the vegetation on the breakwater
+  hash: 3aad651e  # Hash of the configuration (automatically generated)
+  enable: true # Enable vegetation on the breakwater crest
+  type: # Primary vegetation type
+    plant_height: 0.8
+    plant_diameter: 0.025
+    plant_density: 40.0
+    drag_coefficient: 1.3
+  other_type: # Optional second vegetation type
+    plant_height: 0.4
+    plant_diameter: 0.015
+    plant_density: 60.0
+    drag_coefficient: 1.0
+  distribution: half # Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'
+  type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
 numeric: # configuration for the numerical parameters
   hash: a51c61b0  # Hash of the configuration (automatically generated)
   n_waves: 50 # Number of waves to simulate

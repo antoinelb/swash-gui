@@ -44,6 +44,32 @@ $ Porosity parameters for rock: Dn50={{ breakwater.armour_dn50 }}m, height={{ br
 POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{ water.wave_period }}
 {%- endif %}
 
+{%- if vegetation.enable and breakwater.enable %}
+$=============================================================================
+$ VEGETATION
+$=============================================================================
+{%- if vegetation.other_type %}
+$ Two vegetation types on breakwater crest: {{ vegetation.distribution }} distribution
+$ Type 1: height={{ vegetation.type.plant_height }}m, diameter={{ vegetation.type.plant_diameter }}m, density={{ vegetation.type.plant_density }}/m², drag={{ vegetation.type.drag_coefficient }}
+$ Type 2: height={{ vegetation.other_type.plant_height }}m, diameter={{ vegetation.other_type.plant_diameter }}m, density={{ vegetation.other_type.plant_density }}/m², drag={{ vegetation.other_type.drag_coefficient }}
+$ Distribution: {{ vegetation.type_fraction*100 }}% type 1, {{ (1-vegetation.type_fraction)*100 }}% type 2
+INPGRID NPLANTS REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP NPLANTS 1.0 'vegetation_density.txt' IDLA=3 FREE
+$ Using the taller vegetation as base (SWASH will use max of both types)
+{%- if vegetation.type.plant_height >= vegetation.other_type.plant_height %}
+VEGETATION {{ vegetation.type.plant_height }} {{ vegetation.type.plant_diameter }} 1 {{ vegetation.type.drag_coefficient }}
+{%- else %}
+VEGETATION {{ vegetation.other_type.plant_height }} {{ vegetation.other_type.plant_diameter }} 1 {{ vegetation.other_type.drag_coefficient }}
+{%- endif %}
+{%- else %}
+$ Single vegetation type on breakwater crest
+$ Plant characteristics: height={{ vegetation.type.plant_height }}m, diameter={{ vegetation.type.plant_diameter }}m, density={{ vegetation.type.plant_density }}/m², drag={{ vegetation.type.drag_coefficient }}
+INPGRID NPLANTS REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP NPLANTS 1.0 'vegetation_density.txt' IDLA=3 FREE
+VEGETATION {{ vegetation.type.plant_height }} {{ vegetation.type.plant_diameter }} 1 {{ vegetation.type.drag_coefficient }}
+{%- endif %}
+{%- endif %}
+
 $=============================================================================
 $ WAVE GENERATION
 $=============================================================================

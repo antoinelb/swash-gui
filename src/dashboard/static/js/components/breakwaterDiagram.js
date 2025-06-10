@@ -218,6 +218,113 @@ export function createBreakwaterDiagram(container, configStore) {
       }));
       
       topOfStructure = bwY; // Track the highest point for label positioning
+      
+      // Add vegetation if enabled
+      if (config.vegetation?.enable) {
+        const vegetationHeight = 8; // Fixed vegetation visualization height in pixels
+        const vegetationY = bwY - vegetationHeight;
+        
+        if (config.vegetation.other_type) {
+          // Two vegetation types
+          if (config.vegetation.distribution === 'half') {
+            const crestMid = (crestStart + crestEnd) / 2;
+            
+            // Type 1 (seaward half)
+            g.appendChild(svg('rect', {
+              x: crestStart,
+              y: vegetationY,
+              width: crestMid - crestStart,
+              height: vegetationHeight,
+              fill: 'var(--green)',
+              opacity: 0.7
+            }));
+            
+            // Type 2 (leeward half)
+            g.appendChild(svg('rect', {
+              x: crestMid,
+              y: vegetationY,
+              width: crestEnd - crestMid,
+              height: vegetationHeight,
+              fill: 'var(--yellow)',
+              opacity: 0.7
+            }));
+            
+            // Vegetation type labels
+            g.appendChild(svg('text', {
+              x: (crestStart + crestMid) / 2,
+              y: vegetationY - 5,
+              'text-anchor': 'middle',
+              fill: 'var(--green)',
+              'font-size': '10'
+            }, ['Type 1']));
+            
+            g.appendChild(svg('text', {
+              x: (crestMid + crestEnd) / 2,
+              y: vegetationY - 5,
+              'text-anchor': 'middle',
+              fill: 'var(--yellow)',
+              'font-size': '10'
+            }, ['Type 2']));
+            
+          } else {
+            // For alternating and custom distributions, show as mixed pattern
+            const patternWidth = 4;
+            for (let x = crestStart; x < crestEnd; x += patternWidth * 2) {
+              // Type 1 segments
+              g.appendChild(svg('rect', {
+                x: x,
+                y: vegetationY,
+                width: Math.min(patternWidth, crestEnd - x),
+                height: vegetationHeight,
+                fill: 'var(--green)',
+                opacity: 0.7
+              }));
+              
+              // Type 2 segments
+              if (x + patternWidth < crestEnd) {
+                g.appendChild(svg('rect', {
+                  x: x + patternWidth,
+                  y: vegetationY,
+                  width: Math.min(patternWidth, crestEnd - x - patternWidth),
+                  height: vegetationHeight,
+                  fill: 'var(--yellow)',
+                  opacity: 0.7
+                }));
+              }
+            }
+            
+            // Single label for mixed vegetation
+            g.appendChild(svg('text', {
+              x: (crestStart + crestEnd) / 2,
+              y: vegetationY - 5,
+              'text-anchor': 'middle',
+              fill: 'var(--green)',
+              'font-size': '10'
+            }, ['Mixed Vegetation']));
+          }
+        } else {
+          // Single vegetation type
+          g.appendChild(svg('rect', {
+            x: crestStart,
+            y: vegetationY,
+            width: crestEnd - crestStart,
+            height: vegetationHeight,
+            fill: 'var(--green)',
+            opacity: 0.7
+          }));
+          
+          // Vegetation label
+          g.appendChild(svg('text', {
+            x: (crestStart + crestEnd) / 2,
+            y: vegetationY - 5,
+            'text-anchor': 'middle',
+            fill: 'var(--green)',
+            'font-size': '10'
+          }, ['Vegetation']));
+        }
+        
+        topOfStructure = vegetationY; // Update highest point
+      }
         
       // Breakwater labels
       g.appendChild(svg('text', {

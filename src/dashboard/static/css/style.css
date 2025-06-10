@@ -199,6 +199,21 @@ h3 {
   color: var(--base);
 }
 
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+/* Vegetation Controls */
+.vegetation-controls {
+  margin: 12px 0;
+}
+
+.vegetation-controls .btn {
+  margin-right: 8px;
+}
+
 /* Icons */
 .icon {
   width: 16px;
