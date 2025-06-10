@@ -19,6 +19,7 @@ dependencies = [
     "starlette>=0.47.0",
     "plotly>=6.1.2",
     "kaleido==0.2.1",
+    "pandas>=2.3.0",
 ]
 
 [project.scripts]

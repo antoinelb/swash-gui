@@ -58,6 +58,7 @@ async def get_config(request: Request) -> JSONResponse:
                 "hash": cfg.hash,
                 "grid": cfg.grid.model_dump(),
                 "water": {**cfg.water.model_dump(), "wavelength": wavelength},
+                "breakwater": cfg.breakwater.model_dump(),
                 "numeric": cfg.numeric.model_dump(),
             }
         )

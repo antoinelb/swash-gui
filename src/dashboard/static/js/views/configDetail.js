@@ -3,7 +3,7 @@
 import * as api from '../api.js';
 import { createConfigStore } from '../stores/configStore.js';
 import { createConfigViewer } from '../components/configViewer.js';
-import { createChannelDiagram } from '../components/breakwaterDiagram.js';
+import { createBreakwaterDiagram } from '../components/breakwaterDiagram.js';
 import { icon } from '../utils.js';
 
 export function createConfigDetailView(configName) {
@@ -40,7 +40,6 @@ export function createConfigDetailView(configName) {
 
 <div class="config-detail">
   <div id="diagram" class="panel">
-    <h3>Channel Diagram</h3>
     <div id="diagram-content"></div>
   </div>
   <div id="analysis" class="panel">
@@ -112,6 +111,15 @@ export function createConfigDetailView(configName) {
     }
   };
 
+  const loadAnalysisResults = async () => {
+    try {
+      const analysis = await api.getAnalysisResults(configName);
+      renderAnalysisResults(analysis);
+    } catch (error) {
+      renderAnalysisResults({ error: error.message });
+    }
+  };
+
   const renderAnalysisResults = (analysis) => {
     const analysisPanel = document.getElementById('analysis');
 
@@ -128,46 +136,21 @@ export function createConfigDetailView(configName) {
     analysisPanel.innerHTML = `
 <h3>Analysis Results</h3>
 <div class="analysis-content">
-  <div class="analysis-metrics">
-    <h4>Wave Attenuation</h4>
-    <div class="metric-cards">
-      <div class="metric-card">
-        <span class="metric-label">Transmission Coefficient (Kt)</span>
-        <span class="metric-value">${analysis.transmission_analysis.transmission_coefficient?.toFixed(3) ||
-      'N/A'}</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">Energy Dissipation</span>
-        <span class="metric-value">${analysis.transmission_analysis.energy_dissipation_percent?.toFixed(1) ||
-      'N/A'}%</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">Incident Wave Height</span>
-        <span class="metric-value">${analysis.transmission_analysis.incident_wave_height?.toFixed(3) || 'N/A'} m</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">Transmitted Wave Height</span>
-        <span class="metric-value">${analysis.transmission_analysis.transmitted_wave_height?.toFixed(3) || 'N/A'}
-          m</span>
-      </div>
-    </div>
-  </div>
   <div class="analysis-plot">
-    <h4>Wave Gauge Time Series</h4>
-    <div id="time-series-plot" style="width: 100%; height: 500px;"></div>
+    <div id="wave-envelope-plot" style="width: 100%; height: 500px;"></div>
   </div>
 </div>
 `;
 
     // Render the plotly chart with Catppuccin theme
-    if (analysis.time_series_plot && window.Plotly) {
+    if (analysis.plot_data && window.Plotly) {
       const config = {
         responsive: true,
         displayModeBar: true,
         modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
         toImageButtonOptions: {
           format: 'png',
-          filename: 'wave_analysis',
+          filename: 'wave_time_series',
           height: 500,
           width: 1000,
           scale: 2
@@ -176,7 +159,7 @@ export function createConfigDetailView(configName) {
 
       // Apply additional Catppuccin theming to layout
       const layout = {
-        ...analysis.time_series_plot.layout,
+        ...analysis.plot_data.layout,
         modebar: {
           bgcolor: 'rgba(49, 50, 68, 0.8)',
           color: '#cdd6f4',
@@ -184,7 +167,7 @@ export function createConfigDetailView(configName) {
         }
       };
 
-      window.Plotly.newPlot('time-series-plot', analysis.time_series_plot.data, layout, config);
+      window.Plotly.newPlot('wave-envelope-plot', analysis.plot_data.data, layout, config);
     }
   };
 
@@ -196,7 +179,7 @@ export function createConfigDetailView(configName) {
         configStore,
         isEditing
       ),
-      createChannelDiagram(
+      createBreakwaterDiagram(
         document.getElementById('diagram-content'),
         configStore
       ),
@@ -216,6 +199,9 @@ export function createConfigDetailView(configName) {
 
       // Mount components
       mountComponents();
+
+      // Try to load analysis results if they exist
+      loadAnalysisResults();
 
       // Return cleanup function
       return () => {

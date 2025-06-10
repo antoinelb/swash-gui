@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Code Documentation Guidelines
+- Code explanations should be in function docstrings
+- Write comments only if they are absolutely necessary to understand a code chunk
+- Never write module docstrings
+
 ## Commands
 
 ### Development Environment
@@ -104,3 +109,6 @@ Configurations use hierarchical validation with automatic hash generation. When 
 - Use the dashboard for guided editing with real-time validation
 - CLI `create` command initializes configs with sensible defaults
 - All changes update the configuration hash, triggering new simulation directories
+
+## Web Scraping and Automation Guidelines
+- Always close browser tabs/puppeteer browser instances after task completion to free up system resources

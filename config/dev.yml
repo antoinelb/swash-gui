@@ -1,4 +1,4 @@
-hash: fc01875c  # hash of the config (automatically modified)
+hash: 3a5aead8  # hash of the config (automatically modified)
 grid: # computational grid configuration
   hash: 44136fa3  # Hash of the configuration (automatically generated)
 water: # configuration for the water in the channel
@@ -7,6 +7,16 @@ water: # configuration for the water in the channel
   water_density: 1000.0 # Density of water (kg/m^3)
   wave_height: 0.6 # Wave height for regular waves (m)
   wave_period: 5.0 # Wave period for regular waves (s)
+breakwater: # breakwater configuration
+  hash: bfa65295  # Hash of the configuration (automatically generated)
+  enable: true # Enable breakwater in the simulation
+  crest_height: 2.0 # Height of the crest from the floor (m)
+  crest_width: 2.0 # Width of the crest (m)
+  slope: 2.0 # Slope of the breakwater sides (H:V ratio)
+  porosity: 0.4 # Porosity of the breakwater (0-1)
+  stone_density: 2600.0 # Density of the stones (kg/m^3)
+  armour_dn50: 1.15 # Median diameter of armour stones (m)
+  breakwater_start_position: 70.0 # Start position of the breakwater (m)
 numeric: # configuration for the numerical parameters
   hash: a51c61b0  # Hash of the configuration (automatically generated)
   n_waves: 50 # Number of waves to simulate

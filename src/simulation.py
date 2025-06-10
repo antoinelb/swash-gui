@@ -32,6 +32,9 @@ def run_simulation(config: Config) -> None:
 
     # Create all necessary files in swash subdirectory
     _create_bathymetry_file(config, simulation_dir=swash_dir)
+    if config.breakwater.enable:
+        _create_porosity_file(config, simulation_dir=swash_dir)
+        _create_structure_height_file(config, simulation_dir=swash_dir)
     _create_input_file(config, simulation_dir=swash_dir, template_dir=template_dir)
 
     # Execute SWASH
@@ -63,15 +66,48 @@ def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
     The bathymetry file contains bottom elevation values at each grid point.
     For a flat bottom, all values are 0.0.
     """
-    # Create grid points
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-
-    # Flat bottom at z=0
     bottom = np.zeros_like(x)
-
-    # Write to file
+    
     output_path = simulation_dir / "bathymetry.txt"
     np.savetxt(output_path, bottom, fmt="%.3f")
+
+
+def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
+    """Create porosity file for the breakwater.
+
+    The porosity file contains porosity values at each grid point.
+    Porosity is set to the breakwater porosity within the breakwater extent,
+    and 0.0 elsewhere.
+    """
+    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
+    porosity = np.zeros_like(x)
+    
+    breakwater_mask = (x >= config.breakwater.breakwater_start_position) & (
+        x <= config.breakwater_end_position
+    )
+    porosity[breakwater_mask] = config.breakwater.porosity
+    
+    output_path = simulation_dir / "porosity.txt"
+    np.savetxt(output_path, porosity, fmt="%.3f")
+
+
+def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> None:
+    """Create structure height file for the breakwater.
+
+    The structure height file contains the height of the porous structure
+    at each grid point.
+    """
+    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
+    structure_height = np.zeros_like(x)
+    
+    breakwater_mask = (x >= config.breakwater.breakwater_start_position) & (
+        x <= config.breakwater_end_position
+    )
+    structure_height[breakwater_mask] = config.breakwater.crest_height
+    
+    output_path = simulation_dir / "structure_height.txt"
+    np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
 
@@ -101,6 +137,7 @@ def _create_input_file(
         "project_nr": project_nr,
         "grid": config.grid,
         "water": config.water,
+        "breakwater": config.breakwater,
         "numeric": config.numeric,
         "simulation_duration": config.simulation_duration,
         "enumerate": enumerate,  # Make enumerate available in template

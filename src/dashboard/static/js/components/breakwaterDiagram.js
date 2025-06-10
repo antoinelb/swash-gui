@@ -1,24 +1,40 @@
-// Channel diagram component
+// Breakwater diagram component
 
 import { svg } from '../utils.js';
 
-export function createChannelDiagram(container, configStore) {
+export function createBreakwaterDiagram(container, configStore) {
   let unsubscribe = null;
   
   const render = (config) => {
     if (!config) return;
     
+    // Check if breakwater is enabled
+    const breakwaterEnabled = config.breakwater?.enable !== false;
+    
     // Validate required numeric values before proceeding
-    const requiredValues = [
+    const baseRequiredValues = [
       config.water?.water_level,
       config.water?.wave_height,
       config.water?.wave_period
     ];
     
+    const breakwaterRequiredValues = breakwaterEnabled ? [
+      config.breakwater?.breakwater_start_position,
+      config.breakwater?.crest_height,
+      config.breakwater?.crest_width,
+      config.breakwater?.slope
+    ] : [];
+    
+    const requiredValues = [...baseRequiredValues, ...breakwaterRequiredValues];
+    
     if (requiredValues.some(val => val === undefined || val === null || val === '' || isNaN(val))) {
-      container.innerHTML = '<p style="color: var(--subtext0); padding: 20px;">Complete the configuration to see the diagram</p>';
+      const diagramTitle = breakwaterEnabled ? 'Breakwater Cross-Section' : 'Wave Channel Cross-Section';
+      container.innerHTML = `<h3>${diagramTitle}</h3><p style="color: var(--subtext0); padding: 20px;">Complete the configuration to see the diagram</p>`;
       return;
     }
+    
+    const diagramTitle = breakwaterEnabled ? 'Breakwater Cross-Section' : 'Wave Channel Cross-Section';
+    container.innerHTML = `<h3>${diagramTitle}</h3>`;
     
     // SVG dimensions and margins
     const margin = { top: 20, right: 20, bottom: 40, left: 40 };
@@ -40,34 +56,57 @@ export function createChannelDiagram(container, configStore) {
     svgContainer.style.position = 'relative';
     svgContainer.style.boxSizing = 'border-box';
     
-    // Calculate channel dimensions (112m from template)
-    const channelLength = 112.0;
+    // Calculate domain dimensions
+    let breakwaterStart, breakwaterHeight, breakwaterSlope, crestWidth, baseWidth, breakwaterEnd;
+    let fullDiagramStart, fullDiagramEnd, visibleStart, visibleEnd;
     
-    // Calculate full domain bounds for scrolling
-    const fullDiagramStart = 0;
-    const fullDiagramEnd = channelLength;
+    if (breakwaterEnabled) {
+      // Calculate breakwater dimensions
+      breakwaterStart = config.breakwater.breakwater_start_position;
+      breakwaterHeight = config.breakwater.crest_height;
+      breakwaterSlope = config.breakwater.slope;
+      crestWidth = config.breakwater.crest_width;
+      
+      // Bottom width = crest width + 2 * (height * slope)
+      baseWidth = crestWidth + 2 * (breakwaterHeight * breakwaterSlope);
+      breakwaterEnd = breakwaterStart + baseWidth;
+      
+      // Calculate full domain bounds for scrolling - start from 0m
+      fullDiagramStart = 0;
+      fullDiagramEnd = 112.0; // Full channel length
+      
+      // Calculate visible bounds: 5m on each side of breakwater
+      visibleStart = Math.max(0, breakwaterStart - 5);
+      visibleEnd = Math.min(112.0, breakwaterEnd + 5);
+    } else {
+      // No breakwater - show full channel
+      fullDiagramStart = 0;
+      fullDiagramEnd = 112.0;
+      
+      // Show full channel
+      visibleStart = 0;
+      visibleEnd = 112.0;
+    }
+    
     const fullDiagramLength = fullDiagramEnd - fullDiagramStart;
-    
-    // Calculate visible bounds: show full channel initially
-    const visibleStart = 0;
-    const visibleEnd = channelLength;
     const visibleLength = visibleEnd - visibleStart;
     
     // Use same scale for both axes to maintain correct proportions
-    // Ensure at least 3m vertical display
-    const maxHeight = Math.max(3.0, config.water.water_level + 1); // At least 3m or water level + 1m margin
+    const maxHeight = breakwaterEnabled ? Math.max(config.water.water_level + 2, breakwaterHeight + 1) : Math.max(3.0, config.water.water_level + 1);
     const availableWidth = containerWidth - margin.left - margin.right;
     
-    // Calculate scale - use full vertical space, same scale for horizontal
-    const yScale = plotHeight / maxHeight;
-    const scale = yScale; // Use vertical scale for both directions
+    // Calculate scale to fit visible area in container
+    const xScaleFromVisible = availableWidth / visibleLength;
+    const yScaleFromHeight = plotHeight / maxHeight;
+    const scale = Math.min(xScaleFromVisible, yScaleFromHeight);
     
     // Calculate dimensions
-    const actualPlotHeight = plotHeight; // Use full vertical space
-    const fullPlotWidth = fullDiagramLength * scale; // Full scrollable width (will be wider)
+    const actualPlotHeight = maxHeight * scale;
+    const fullPlotWidth = fullDiagramLength * scale; // Full scrollable width
+    const visiblePlotWidth = visibleLength * scale;   // Visible area width
     
-    // Use full plot height (no vertical centering)
-    const yOffset = 0;
+    // Center vertically if smaller than available space
+    const yOffset = Math.max(0, (plotHeight - actualPlotHeight) / 2);
     
     // SVG dimensions: full width for scrolling, fixed height
     const svgWidth = fullPlotWidth + margin.left + margin.right;
@@ -145,16 +184,59 @@ export function createChannelDiagram(container, configStore) {
       }));
     }
     
-    // Simple channel - just show the flat bottom
+    // Breakwater (only if enabled)
+    let topOfStructure = actualPlotHeight; // Track the highest point for label positioning
+    if (breakwaterEnabled) {
+      const bwStart = (breakwaterStart - fullDiagramStart) * scale;
+      const bwEnd = (breakwaterEnd - fullDiagramStart) * scale;
+      const bwWidth = bwEnd - bwStart;
+      const bwHeight = config.breakwater.crest_height * scale;
+      const bwY = actualPlotHeight - bwHeight;
     
-    // Channel length label (below distance labels)
-    g.appendChild(svg('text', {
-      x: fullPlotWidth / 2,
-      y: actualPlotHeight + 35,
-      'text-anchor': 'middle',
-      fill: 'var(--text)',
-      'font-size': '14'
-    }, [`Channel Length: ${channelLength}m`]));
+      // Breakwater core (trapezoid)
+      // Slope offset in screen coordinates
+      const slopeOffset = (breakwaterHeight * breakwaterSlope) * scale;
+      const crestWidthScaled = crestWidth * scale;
+      
+      // Calculate trapezoid points
+      const crestStart = bwStart + slopeOffset;
+      const crestEnd = crestStart + crestWidthScaled;
+      
+      const breakwaterPath = [
+        `M ${bwStart} ${actualPlotHeight}`,  // Bottom left
+        `L ${crestStart} ${bwY}`,            // Top left
+        `L ${crestEnd} ${bwY}`,              // Top right  
+        `L ${bwEnd} ${actualPlotHeight}`,    // Bottom right
+        `Z`
+      ].join(' ');
+      
+      g.appendChild(svg('path', {
+        d: breakwaterPath,
+        fill: 'var(--surface1)',
+        stroke: 'var(--surface2)',
+        'stroke-width': 2
+      }));
+      
+      topOfStructure = bwY; // Track the highest point for label positioning
+        
+      // Breakwater labels
+      g.appendChild(svg('text', {
+        x: (bwStart + bwEnd) / 2,
+        y: actualPlotHeight + 20,
+        'text-anchor': 'middle',
+        fill: 'var(--text)',
+        'font-size': '14'
+      }, [`Breakwater: ${breakwaterStart.toFixed(1)}m - ${breakwaterEnd.toFixed(1)}m`]));
+      
+      // Height dimensions
+      g.appendChild(svg('text', {
+        x: (bwStart + bwEnd) / 2,
+        y: bwY - 10,
+        'text-anchor': 'middle',
+        fill: 'var(--subtext0)',
+        'font-size': '12'
+      }, [`Height: ${config.breakwater.crest_height}m`]));
+    }
     
     // Wave parameters label
     if (wavelength && !isNaN(wavelength) && wavelength > 0) {
@@ -200,7 +282,7 @@ export function createChannelDiagram(container, configStore) {
       const xPos = (x - fullDiagramStart) * scale;
       g.appendChild(svg('text', {
         x: xPos,
-        y: actualPlotHeight + 20,
+        y: actualPlotHeight + 35,
         'text-anchor': 'middle',
         fill: 'var(--subtext0)',
         'font-size': '12'
@@ -236,13 +318,22 @@ export function createChannelDiagram(container, configStore) {
     svgContainer.appendChild(overlayEl);
     container.appendChild(svgContainer);
     
-    // Set initial scroll position centered on the channel after DOM update
+    // Set initial scroll position centered on the breakwater after DOM update
     requestAnimationFrame(() => {
-      const channelCenter = channelLength / 2;
-      const channelCenterInSvg = (channelCenter - fullDiagramStart) * scale + margin.left;
-      const viewportCenter = svgContainer.clientWidth / 2;
-      const centerScrollOffset = channelCenterInSvg - viewportCenter;
-      svgContainer.scrollLeft = Math.max(0, centerScrollOffset);
+      if (breakwaterEnabled) {
+        const breakwaterCenter = (breakwaterStart + breakwaterEnd) / 2;
+        const breakwaterCenterInSvg = (breakwaterCenter - fullDiagramStart) * scale + margin.left;
+        const viewportCenter = svgContainer.clientWidth / 2;
+        const centerScrollOffset = breakwaterCenterInSvg - viewportCenter;
+        svgContainer.scrollLeft = Math.max(0, centerScrollOffset);
+      } else {
+        // Center on channel middle if no breakwater
+        const channelCenter = fullDiagramLength / 2;
+        const channelCenterInSvg = (channelCenter - fullDiagramStart) * scale + margin.left;
+        const viewportCenter = svgContainer.clientWidth / 2;
+        const centerScrollOffset = channelCenterInSvg - viewportCenter;
+        svgContainer.scrollLeft = Math.max(0, centerScrollOffset);
+      }
     });
   };
   

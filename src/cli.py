@@ -68,7 +68,9 @@ def _create_or_update(
     """
     (c) Creates or updates experiment config files with defaults.
     """
-    files = [f"{file}.yml" if not file.endswith(".yml") else file for file in files]
+    files = [
+        f"{file}.yml" if not file.endswith(".yml") else file for file in files
+    ]
     for file in _expand_paths(files):
         path = Path(file)
         try:
@@ -201,33 +203,37 @@ def _analyze(
     (a) Analyze completed simulations and generate wave energy plots.
     """
     from .analysis import analyze_simulation
-    
+
     for config_ in _expand_paths(configs):
         path = Path(config_)
         config = read_config(path)
-        
+
         # Find simulation directory
-        simulation_dir = root_dir / "simulations" / f"{config.name}_{config.hash}"
-        
+        simulation_dir = (
+            root_dir / "simulations" / f"{config.name}_{config.hash}"
+        )
+
         if not simulation_dir.exists():
             error_print(f"Simulation directory not found: {simulation_dir}")
             continue
-            
+
         swash_dir = simulation_dir / "swash"
         if not swash_dir.exists():
             error_print(f"SWASH output directory not found: {swash_dir}")
             continue
-        
+
         load_print(f"Analyzing simulation {config.name}...")
         try:
             analysis_results = analyze_simulation(simulation_dir, config)
-            
+
             if "error" in analysis_results:
                 error_print(f"Analysis failed: {analysis_results['error']}")
             else:
-                plot_file = analysis_results.get('plot_file', '')
+                plot_file = analysis_results.get("plot_file", "")
                 if plot_file:
-                    done_print(f"Analysis complete - wave envelope plot saved to analysis/")
+                    done_print(
+                        f"Analysis complete - wave envelope plot saved to analysis/"
+                    )
                 else:
                     done_print("Analysis complete")
         except Exception as e:
