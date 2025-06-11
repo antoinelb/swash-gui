@@ -107,7 +107,7 @@ grid:
 
 breakwater:
   crest_height: 2.0    # Height above seafloor (m)
-  crest_width: 2.0     # Crest width (m)
+  crest_length: 2.0     # Crest length (m)
   slope: 2.0           # Side slope (H:V ratio)
   porosity: 0.4        # Porosity coefficient
 
@@ -149,7 +149,7 @@ python -m src.cli run config/*.yml
 ### Breakwater Parameters
 
 - **crest_height**: Height of breakwater crest above seafloor (m)
-- **crest_width**: Width of the breakwater crest (m)  
+- **crest_length**: Length of the breakwater crest (m)  
 - **slope**: Side slope ratio (horizontal:vertical, e.g., 2:1)
 - **porosity**: Porosity coefficient (0-1)
 - **armour_dn50**: Median diameter of armor stones (m)

@@ -25,7 +25,7 @@ export function createConfigCreateView() {
     breakwater: {
       enable: false,
       crest_height: 1.5,
-      crest_width: 3.0,
+      crest_length: 3.0,
       slope: 2.0,
       porosity: 0.4,
       stone_density: 2650.0,

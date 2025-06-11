@@ -123,7 +123,7 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     
     # Calculate crest boundaries (top of breakwater)
     crest_start = config.breakwater.breakwater_start_position + config.breakwater.crest_height * config.breakwater.slope
-    crest_end = crest_start + config.breakwater.crest_width
+    crest_end = crest_start + config.breakwater.crest_length
     
     # Create mask for crest area
     crest_mask = (x >= crest_start) & (x <= crest_end)

@@ -123,7 +123,7 @@ export function createConfigViewer(container, configStore, editable = false) {
     ${createCheckbox('Enable Breakwater', config.breakwater.enable, 'breakwater.enable')}
     ${config.breakwater.enable || editable ? `
     ${createField('Crest Height (m)', config.breakwater.crest_height, 'breakwater.crest_height')}
-    ${createField('Crest Width (m)', config.breakwater.crest_width, 'breakwater.crest_width')}
+    ${createField('Crest Length (m)', config.breakwater.crest_length, 'breakwater.crest_length')}
     ${createField('Slope (H:V)', config.breakwater.slope, 'breakwater.slope')}
     ${createField('Porosity', config.breakwater.porosity, 'breakwater.porosity')}
     ${createField('Stone Density (kg/m³)', config.breakwater.stone_density, 'breakwater.stone_density')}
@@ -214,7 +214,7 @@ export function createConfigViewer(container, configStore, editable = false) {
 
     updateField('breakwater.enable', config.breakwater.enable);
     updateField('breakwater.crest_height', config.breakwater.crest_height);
-    updateField('breakwater.crest_width', config.breakwater.crest_width);
+    updateField('breakwater.crest_length', config.breakwater.crest_length);
     updateField('breakwater.slope', config.breakwater.slope);
     updateField('breakwater.porosity', config.breakwater.porosity);
     updateField('breakwater.stone_density', config.breakwater.stone_density);

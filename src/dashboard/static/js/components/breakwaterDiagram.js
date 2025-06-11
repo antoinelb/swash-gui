@@ -172,7 +172,7 @@ export function createBreakwaterDiagram(container, configStore) {
     const breakwaterRequiredValues = breakwaterEnabled ? [
       config.breakwater?.breakwater_start_position,
       config.breakwater?.crest_height,
-      config.breakwater?.crest_width,
+      config.breakwater?.crest_length,
       config.breakwater?.slope
     ] : [];
     
@@ -228,7 +228,7 @@ export function createBreakwaterDiagram(container, configStore) {
       breakwaterStart = config.breakwater.breakwater_start_position;
       breakwaterHeight = config.breakwater.crest_height;
       breakwaterSlope = config.breakwater.slope;
-      crestWidth = config.breakwater.crest_width;
+      crestWidth = config.breakwater.crest_length;
       
       // Bottom width = crest width + 2 * (height * slope)
       baseWidth = crestWidth + 2 * (breakwaterHeight * breakwaterSlope);

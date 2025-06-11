@@ -31,7 +31,7 @@ READINP BOTTOM 1.0 'bathymetry.txt' IDLA=3 FREE
 $=============================================================================
 $ BREAKWATER POROSITY
 $=============================================================================
-{%- set breakwater_end = breakwater.breakwater_start_position + breakwater.crest_width + 2 * (breakwater.crest_height * breakwater.slope) %}
+{%- set breakwater_end = breakwater.breakwater_start_position + breakwater.crest_length + 2 * (breakwater.crest_height * breakwater.slope) %}
 $ Breakwater: {{ breakwater.breakwater_start_position }}m to {{ "%.1f"|format(breakwater_end) }}m, slope={{ breakwater.slope }}:1
 
 INPGRID POROSITY REGULAR 0.0 0.0 0.0 500 0 0.224 1.0

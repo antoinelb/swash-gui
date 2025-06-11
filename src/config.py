@@ -75,8 +75,8 @@ class BreakwaterConfig(pydantic.BaseModel):
     crest_height: float = pydantic.Field(
         default=2.0, description="Height of the crest from the floor (m)"
     )
-    crest_width: float = pydantic.Field(
-        default=2.0, description="Width of the crest (m)"
+    crest_length: float = pydantic.Field(
+        default=2.0, description="Length of the crest (m)"
     )
     slope: float = pydantic.Field(
         default=2.0, description="Slope of the breakwater sides (H:V ratio)"
@@ -228,8 +228,8 @@ class Config(pydantic.BaseModel):
         if not self.breakwater.enable:
             return self.breakwater.breakwater_start_position
         
-        # Total base width = crest width + 2 * (height * slope)
-        base_width = self.breakwater.crest_width + 2 * (
+        # Total base width = crest length + 2 * (height * slope)
+        base_width = self.breakwater.crest_length + 2 * (
             self.breakwater.crest_height * self.breakwater.slope
         )
         return self.breakwater.breakwater_start_position + base_width
