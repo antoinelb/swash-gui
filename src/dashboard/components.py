@@ -5,7 +5,9 @@ from dash import html, dcc
 from src import config as config_module
 
 
-def create_config_display(config: config_module.Config, editable: bool = False):
+def create_config_display(
+    config: config_module.Config, editable: bool = False
+):
     """Create a display/form for configuration with optional editing."""
 
     sections = [
@@ -94,7 +96,10 @@ def create_field(
             )
         else:
             input_component = dcc.Input(
-                type=field_type, value=value, id=field_id, className="field-input"
+                type=field_type,
+                value=value,
+                id=field_id,
+                className="field-input",
             )
     else:
         if field_type == "boolean":
@@ -114,7 +119,9 @@ def create_field(
     )
 
 
-def create_array_field(label: str, values: list, field_id: str, editable: bool):
+def create_array_field(
+    label: str, values: list, field_id: str, editable: bool
+):
     """Create a field for array values like wave gauge positions."""
 
     if editable:
@@ -127,14 +134,14 @@ def create_array_field(label: str, values: list, field_id: str, editable: bool):
         )
     else:
         display_value = ", ".join(map(str, values))
-        input_component = html.Span(display_value, className="field-display monospace")
+        input_component = html.Span(
+            display_value, className="field-display monospace"
+        )
 
     return html.Div(
         [html.Label(label, className="field-label"), input_component],
         className="field-container",
     )
-
-
 
 
 def create_results_placeholder():

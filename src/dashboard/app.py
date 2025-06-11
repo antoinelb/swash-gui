@@ -25,7 +25,9 @@ def create_app() -> Starlette:
     static_routes = [
         Mount("/css", app=StaticFiles(directory=str(STATIC_DIR / "css"))),
         Mount("/js", app=StaticFiles(directory=str(STATIC_DIR / "js"))),
-        Mount("/assets", app=StaticFiles(directory=str(STATIC_DIR / "assets"))),
+        Mount(
+            "/assets", app=StaticFiles(directory=str(STATIC_DIR / "assets"))
+        ),
     ]
 
     app = Starlette(

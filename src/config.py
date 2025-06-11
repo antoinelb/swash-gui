@@ -101,7 +101,7 @@ class BreakwaterConfig(pydantic.BaseModel):
 
 class VegetationType(pydantic.BaseModel):
     """Configuration for a single vegetation type."""
-    
+
     plant_height: float = pydantic.Field(
         default=0.5, description="Height of plants (m)"
     )
@@ -227,7 +227,7 @@ class Config(pydantic.BaseModel):
         """Calculate breakwater end position based on start position, crest width, and slope."""
         if not self.breakwater.enable:
             return self.breakwater.breakwater_start_position
-        
+
         # Total base width = crest length + 2 * (height * slope)
         base_width = self.breakwater.crest_length + 2 * (
             self.breakwater.crest_height * self.breakwater.slope
@@ -296,9 +296,7 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
     config_.yaml_add_eol_comment(
         "configuration for the water in the channel", "water"
     )
-    config_.yaml_add_eol_comment(
-        "breakwater configuration", "breakwater"
-    )
+    config_.yaml_add_eol_comment("breakwater configuration", "breakwater")
     config_.yaml_add_eol_comment(
         "configuration for the vegetation on the breakwater", "vegetation"
     )
@@ -319,7 +317,9 @@ def _add_comments(config: Config) -> ruamel.yaml.CommentedMap:
     )
     _add_field_comments(config.breakwater, config_["breakwater"])
 
-    config_["vegetation"] = ruamel.yaml.CommentedMap(config.vegetation.model_dump())
+    config_["vegetation"] = ruamel.yaml.CommentedMap(
+        config.vegetation.model_dump()
+    )
     _add_field_comments(config.vegetation, config_["vegetation"])
 
     config_["numeric"] = ruamel.yaml.CommentedMap(config.numeric.model_dump())

@@ -45,7 +45,7 @@ template = {
                 "tickfont": {"color": "#a6adc8"},
             },
             "paper_bgcolor": "#1e1e2e",  # base
-            "plot_bgcolor": "#181825",   # mantle
+            "plot_bgcolor": "#181825",  # mantle
             "colorway": colours,
             "legend": {
                 "font": {"color": "#cdd6f4"},

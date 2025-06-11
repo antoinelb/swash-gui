@@ -37,18 +37,21 @@ def run_simulation(config: Config) -> None:
         _create_structure_height_file(config, simulation_dir=swash_dir)
         if config.vegetation.enable:
             _create_vegetation_file(config, simulation_dir=swash_dir)
-    _create_input_file(config, simulation_dir=swash_dir, template_dir=template_dir)
+    _create_input_file(
+        config, simulation_dir=swash_dir, template_dir=template_dir
+    )
 
     # Execute SWASH
     success = _execute_swash(config, simulation_dir=swash_dir)
 
     if success:
         done_print("Simulation completed successfully")
-        
+
         # Run analysis if simulation succeeded
         load_print("Generating wave analysis...")
         try:
             from .analysis import analyze_simulation
+
             analyze_simulation(simulation_dir, config)
             done_print("Analysis complete - results saved to analysis/")
         except Exception as e:
@@ -60,8 +63,6 @@ def run_simulation(config: Config) -> None:
 ############
 
 
-
-
 def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
     """Create bathymetry file with flat bottom.
 
@@ -70,7 +71,7 @@ def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
     """
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
     bottom = np.zeros_like(x)
-    
+
     output_path = simulation_dir / "bathymetry.txt"
     np.savetxt(output_path, bottom, fmt="%.3f")
 
@@ -83,18 +84,20 @@ def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
     and 0.0 elsewhere.
     """
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-    porosity = np.zeros_like(x)
-    
+    porosity = np.ones_like(x)
+
     breakwater_mask = (x >= config.breakwater.breakwater_start_position) & (
         x <= config.breakwater_end_position
     )
     porosity[breakwater_mask] = config.breakwater.porosity
-    
+
     output_path = simulation_dir / "porosity.txt"
     np.savetxt(output_path, porosity, fmt="%.3f")
 
 
-def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> None:
+def _create_structure_height_file(
+    config: Config, *, simulation_dir: Path
+) -> None:
     """Create structure height file for the breakwater.
 
     The structure height file contains the height of the porous structure
@@ -102,32 +105,35 @@ def _create_structure_height_file(config: Config, *, simulation_dir: Path) -> No
     """
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
     structure_height = np.zeros_like(x)
-    
+
     breakwater_mask = (x >= config.breakwater.breakwater_start_position) & (
         x <= config.breakwater_end_position
     )
     structure_height[breakwater_mask] = config.breakwater.crest_height
-    
+
     output_path = simulation_dir / "structure_height.txt"
     np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
 def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
     """Create vegetation density file for the breakwater crest.
-    
+
     The vegetation density file contains the number of plant stems per square meter
     at each grid point. Vegetation is only placed on the breakwater crest.
     """
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
     vegetation_density = np.zeros_like(x)
-    
+
     # Calculate crest boundaries (top of breakwater)
-    crest_start = config.breakwater.breakwater_start_position + config.breakwater.crest_height * config.breakwater.slope
+    crest_start = (
+        config.breakwater.breakwater_start_position
+        + config.breakwater.crest_height * config.breakwater.slope
+    )
     crest_end = crest_start + config.breakwater.crest_length
-    
+
     # Create mask for crest area
     crest_mask = (x >= crest_start) & (x <= crest_end)
-    
+
     if config.vegetation.other_type is not None:
         # Two vegetation types with spatial distribution
         if config.vegetation.distribution == "half":
@@ -135,37 +141,50 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
             crest_mid = (crest_start + crest_end) / 2
             type1_mask = crest_mask & (x <= crest_mid)
             type2_mask = crest_mask & (x > crest_mid)
-            vegetation_density[type1_mask] = config.vegetation.type.plant_density
-            vegetation_density[type2_mask] = config.vegetation.other_type.plant_density
-            
+            vegetation_density[type1_mask] = (
+                config.vegetation.type.plant_density
+            )
+            vegetation_density[type2_mask] = (
+                config.vegetation.other_type.plant_density
+            )
+
         elif config.vegetation.distribution == "alternating":
             # Alternating pattern based on type_fraction
             crest_indices = np.where(crest_mask)[0]
             if len(crest_indices) > 0:
-                pattern_length = max(1, int(len(crest_indices) * config.vegetation.type_fraction))
+                pattern_length = max(
+                    1,
+                    int(len(crest_indices) * config.vegetation.type_fraction),
+                )
                 for i, idx in enumerate(crest_indices):
                     if (i // pattern_length) % 2 == 0:
-                        vegetation_density[idx] = config.vegetation.type.plant_density
+                        vegetation_density[idx] = (
+                            config.vegetation.type.plant_density
+                        )
                     else:
-                        vegetation_density[idx] = config.vegetation.other_type.plant_density
-                        
+                        vegetation_density[idx] = (
+                            config.vegetation.other_type.plant_density
+                        )
+
         elif config.vegetation.distribution == "custom":
             # Use type_fraction to determine proportion
             crest_indices = np.where(crest_mask)[0]
             if len(crest_indices) > 0:
-                split_point = int(len(crest_indices) * config.vegetation.type_fraction)
-                vegetation_density[crest_indices[:split_point]] = config.vegetation.type.plant_density
-                vegetation_density[crest_indices[split_point:]] = config.vegetation.other_type.plant_density
+                split_point = int(
+                    len(crest_indices) * config.vegetation.type_fraction
+                )
+                vegetation_density[crest_indices[:split_point]] = (
+                    config.vegetation.type.plant_density
+                )
+                vegetation_density[crest_indices[split_point:]] = (
+                    config.vegetation.other_type.plant_density
+                )
     else:
         # Single vegetation type
         vegetation_density[crest_mask] = config.vegetation.type.plant_density
-    
+
     output_path = simulation_dir / "vegetation_density.txt"
     np.savetxt(output_path, vegetation_density, fmt="%.3f")
-
-
-
-
 
 
 def _create_input_file(
@@ -283,7 +302,9 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
                                     current_time = sim_time
                                     # Update progress bar (convert to centiseconds)
                                     if progress_bar is not None:
-                                        progress_bar.n = int(current_time * 100)
+                                        progress_bar.n = int(
+                                            current_time * 100
+                                        )
                                         progress_bar.refresh()
                     except (IOError, ValueError):
                         pass
@@ -315,7 +336,9 @@ def _execute_swash(config: Config, *, simulation_dir: Path) -> bool:
         error_msgs = _check_swash_errors(simulation_dir)
 
         if error_msgs:
-            error_print(f"SWASH simulation failed with {len(error_msgs)} error(s)")
+            error_print(
+                f"SWASH simulation failed with {len(error_msgs)} error(s)"
+            )
             for msg in error_msgs:
                 error_print(f"  {msg}", indent=2)
             return False

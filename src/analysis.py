@@ -17,14 +17,14 @@ from .config import Config
 def analyze_simulation(simulation_dir: Path, config: Config) -> dict:
     """
     Analyze simulation results and generate plots.
-    
+
     Parameters
     ----------
     simulation_dir : Path
         Directory containing simulation results
     config : Config
         Configuration object for the simulation
-        
+
     Returns
     -------
     dict
@@ -33,7 +33,7 @@ def analyze_simulation(simulation_dir: Path, config: Config) -> dict:
     timestep = _find_timestep(simulation_dir)
     data = _read_simulaton_data(config, timestep, simulation_dir)
     _plot_water_levels_and_x_velocities(data, config, timestep, simulation_dir)
-    
+
     plot_file = simulation_dir / "analysis" / "water_levels_and_x_velocity.png"
     return {"plot_file": str(plot_file) if plot_file.exists() else ""}
 

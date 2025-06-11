@@ -44,13 +44,17 @@ async def get_config(request: Request) -> JSONResponse:
     config_path = CONFIG_DIR / f"{name}.yml"
 
     if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+        return JSONResponse(
+            {"error": "Configuration not found"}, status_code=404
+        )
 
     try:
         cfg = config_module.read_config(config_path)
 
         # Calculate wavelength using dispersion relation
-        wavelength = compute_wavelength(cfg.water.wave_period, cfg.water.water_level)
+        wavelength = compute_wavelength(
+            cfg.water.wave_period, cfg.water.water_level
+        )
 
         return JSONResponse(
             {
@@ -102,7 +106,9 @@ async def update_config(request: Request) -> JSONResponse:
 
     config_path = CONFIG_DIR / f"{name}.yml"
     if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+        return JSONResponse(
+            {"error": "Configuration not found"}, status_code=404
+        )
 
     try:
         # Create updated config
@@ -135,7 +141,9 @@ async def delete_config(request: Request) -> JSONResponse:
     config_path = CONFIG_DIR / f"{name}.yml"
 
     if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+        return JSONResponse(
+            {"error": "Configuration not found"}, status_code=404
+        )
 
     try:
         config_path.unlink()
@@ -152,7 +160,9 @@ async def simulate_config(request: Request) -> JSONResponse:
     config_path = CONFIG_DIR / f"{name}.yml"
 
     if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+        return JSONResponse(
+            {"error": "Configuration not found"}, status_code=404
+        )
 
     try:
         # Load config and run simulation
@@ -180,7 +190,8 @@ async def calculate_wavelength(request: Request) -> JSONResponse:
 
         if wave_period is None or water_level is None:
             return JSONResponse(
-                {"error": "wave_period and water_level are required"}, status_code=400
+                {"error": "wave_period and water_level are required"},
+                status_code=400,
             )
 
         wavelength = compute_wavelength(wave_period, water_level)
@@ -198,23 +209,28 @@ async def get_analysis_results(request: Request) -> JSONResponse:
     config_path = CONFIG_DIR / f"{name}.yml"
 
     if not config_path.exists():
-        return JSONResponse({"error": "Configuration not found"}, status_code=404)
+        return JSONResponse(
+            {"error": "Configuration not found"}, status_code=404
+        )
 
     try:
         # Load config to get hash
         cfg = config_module.read_config(config_path)
         simulation_dir = root_dir / "simulations" / f"{cfg.name}_{cfg.hash}"
         analysis_dir = simulation_dir / "analysis"
-        
+
         # Check for the Plotly JSON file
         plot_file = analysis_dir / "water_levels_and_x_velocity.json"
-        
+
         if not plot_file.exists():
-            return JSONResponse({"error": "Analysis results not found"}, status_code=404)
+            return JSONResponse(
+                {"error": "Analysis results not found"}, status_code=404
+            )
 
         # Load plot data
         import json
-        with open(plot_file, 'r') as f:
+
+        with open(plot_file, "r") as f:
             plot_data = json.load(f)
 
         return JSONResponse({"plot_data": plot_data})
