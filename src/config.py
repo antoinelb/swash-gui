@@ -143,9 +143,9 @@ class VegetationConfig(pydantic.BaseModel):
     )
 
     # Spatial distribution (only used if other_type is defined)
-    distribution: Literal["half", "alternating", "custom"] = pydantic.Field(
+    distribution: Literal["half", "alternating"] = pydantic.Field(
         default="half",
-        description="Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'",
+        description="Distribution pattern: 'half' (seaward/leeward) or 'alternating'",
     )
 
     type_fraction: float = pydantic.Field(

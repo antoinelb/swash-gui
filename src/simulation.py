@@ -166,19 +166,6 @@ def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
                             config.vegetation.other_type.plant_density
                         )
 
-        elif config.vegetation.distribution == "custom":
-            # Use type_fraction to determine proportion
-            crest_indices = np.where(crest_mask)[0]
-            if len(crest_indices) > 0:
-                split_point = int(
-                    len(crest_indices) * config.vegetation.type_fraction
-                )
-                vegetation_density[crest_indices[:split_point]] = (
-                    config.vegetation.type.plant_density
-                )
-                vegetation_density[crest_indices[split_point:]] = (
-                    config.vegetation.other_type.plant_density
-                )
     else:
         # Single vegetation type
         vegetation_density[crest_mask] = config.vegetation.type.plant_density
