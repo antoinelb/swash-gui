@@ -1,4 +1,4 @@
-hash: f5538748  # hash of the config (automatically modified)
+hash: 9accb0b1  # hash of the config (automatically modified)
 grid: # computational grid configuration
   hash: 44136fa3  # Hash of the configuration (automatically generated)
 water: # configuration for the water in the channel
@@ -29,9 +29,10 @@ vegetation: # configuration for the vegetation on the breakwater
   distribution: half # Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'
   type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
 numeric: # configuration for the numerical parameters
-  hash: '77339272'  # Hash of the configuration (automatically generated)
+  hash: d940923e  # Hash of the configuration (automatically generated)
   n_waves: 100 # Number of waves to simulate
   wave_gauge_positions: # X-positions of wave gauges (m)
+  - 5.0
   - 20.0
   - 30.0
   - 50.0

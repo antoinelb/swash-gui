@@ -1,7 +1,7 @@
 $ SWASH Input File - 1D Wave Channel Experiment
 $ model001_with_breakwater_and_vegetation
 
-PROJECT 'WaveChannel' '8e6'
+PROJECT 'WaveChannel' '78a'
 
 $=============================================================================
 $ MODEL SETUP
@@ -83,15 +83,16 @@ $=============================================================================
 $ OUTPUT
 $=============================================================================
 $ Wave gauges
-POINTS 'WG01' 20.0 0.0
-POINTS 'WG02' 30.0 0.0
-POINTS 'WG03' 50.0 0.0
-POINTS 'WG04' 70.0 0.0
-POINTS 'WG05' 72.3 0.0
-POINTS 'WG06' 74.6 0.0
-POINTS 'WG07' 80.0 0.0
-POINTS 'WG08' 90.0 0.0
-POINTS 'WG09' 100.0 0.0
+POINTS 'WG01' 5.0 0.0
+POINTS 'WG02' 20.0 0.0
+POINTS 'WG03' 30.0 0.0
+POINTS 'WG04' 50.0 0.0
+POINTS 'WG05' 70.0 0.0
+POINTS 'WG06' 72.3 0.0
+POINTS 'WG07' 74.6 0.0
+POINTS 'WG08' 80.0 0.0
+POINTS 'WG09' 90.0 0.0
+POINTS 'WG10' 100.0 0.0
 
 $ Time series output
 TABLE 'WG01' NOHEADER 'wg01.txt' &
@@ -111,6 +112,8 @@ TABLE 'WG07' NOHEADER 'wg07.txt' &
 TABLE 'WG08' NOHEADER 'wg08.txt' &
       WATLEV VEL OUTPUT 000000.000 0.1 SEC
 TABLE 'WG09' NOHEADER 'wg09.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG10' NOHEADER 'wg10.txt' &
       WATLEV VEL OUTPUT 000000.000 0.1 SEC
 
 $ Wave statistics (last 30 minutes by default)

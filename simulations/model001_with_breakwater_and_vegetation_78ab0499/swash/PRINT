@@ -1,6 +1,6 @@
 1
 
-                    Execution started at 20250611.094844         
+                    Execution started at 20250611.134256         
 
 
 
@@ -14,11 +14,11 @@
     
  $ SWASH Input File - 1D Wave Channel Experiment
     
- $ model001_with_breakwater
+ $ model001_with_breakwater_and_vegetation
     
  
     
- PROJECT 'WaveChannel' 'f55'
+ PROJECT 'WaveChannel' '78a'
     
  
     
@@ -94,6 +94,28 @@
     
  POROSITY 0.3931 0.9167 200.0 1.1 8.0
     
+ $=============================================================================
+    
+ $ VEGETATION
+    
+ $=============================================================================
+    
+ $ Two vegetation types on breakwater crest: alternating distribution
+    
+ $ Type 1: height=0.5m, diameter=0.02m, density=50.0/m², drag=1.2
+    
+ $ Type 2: height=0.3m, diameter=0.015m, density=50.0/m², drag=1.0
+    
+ $ Distribution: 50.0% type 1, 50.0% type 2
+    
+ INPGRID NPLANTS REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+    
+ READINP NPLANTS 1.0 'vegetation_density.txt' IDLA=3 FREE
+    
+ $ Using the taller vegetation as base (SWASH will use max of both types)
+    
+ VEGETATION 0.5 0.02 1 1.2
+    
  
     
  $=============================================================================
@@ -160,23 +182,25 @@
     
  $ Wave gauges
     
- POINTS 'WG01' 20.0 0.0
+ POINTS 'WG01' 5.0 0.0
     
- POINTS 'WG02' 30.0 0.0
+ POINTS 'WG02' 20.0 0.0
     
- POINTS 'WG03' 50.0 0.0
+ POINTS 'WG03' 30.0 0.0
     
- POINTS 'WG04' 70.0 0.0
+ POINTS 'WG04' 50.0 0.0
     
- POINTS 'WG05' 72.3 0.0
+ POINTS 'WG05' 70.0 0.0
     
- POINTS 'WG06' 74.6 0.0
+ POINTS 'WG06' 72.3 0.0
     
- POINTS 'WG07' 80.0 0.0
+ POINTS 'WG07' 74.6 0.0
     
- POINTS 'WG08' 90.0 0.0
+ POINTS 'WG08' 80.0 0.0
     
- POINTS 'WG09' 100.0 0.0
+ POINTS 'WG09' 90.0 0.0
+    
+ POINTS 'WG10' 100.0 0.0
     
  
     
@@ -207,6 +231,9 @@
        WATLEV VEL OUTPUT 000000.000 0.1 SEC
     
  TABLE 'WG09' NOHEADER 'wg09.txt' &
+       WATLEV VEL OUTPUT 000000.000 0.1 SEC
+    
+ TABLE 'WG10' NOHEADER 'wg10.txt' &
        WATLEV VEL OUTPUT 000000.000 0.1 SEC
     
  
@@ -259,7 +286,7 @@
  Wind input           : WSPEED   0.0000E+00 DIR     0.0000E+00
  Wind stress is off
  Manning formulation  : CF       0.1900E-01
- Vegetation is off
+ Wave damping due to vegetation is included
  Wave breaking control: ALPHA    0.6000E+00 BETA    0.3000E+00
  Baroclinic forcing is off
  Coriolis forcing is off
