@@ -22,6 +22,28 @@ export function createConfigCreateView() {
       wave_height: 0.5,
       wave_period: 6.0
     },
+    breakwater: {
+      enable: false,
+      crest_height: 1.5,
+      crest_width: 3.0,
+      slope: 2.0,
+      porosity: 0.4,
+      stone_density: 2650.0,
+      armour_dn50: 0.5,
+      breakwater_start_position: 70.0
+    },
+    vegetation: {
+      enable: false,
+      type: {
+        plant_height: 0.5,
+        plant_diameter: 0.01,
+        plant_density: 100.0,
+        drag_coefficient: 1.0
+      },
+      other_type: null,
+      distribution: 'half',
+      type_fraction: 0.5
+    },
     numeric: {
       n_waves: 50,
       // Time step (0.05s) and output interval (0.1s) are fixed
