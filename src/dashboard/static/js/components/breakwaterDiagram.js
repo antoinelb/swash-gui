@@ -1,12 +1,163 @@
 // Breakwater diagram component
 
-import { svg } from '../utils.js';
+import { svg, icon } from '../utils.js';
 
 export function createBreakwaterDiagram(container, configStore) {
   let unsubscribe = null;
+  let currentSvgEl = null;
+  let currentConfig = null;
+  
+  const exportSVG = () => {
+    if (!currentSvgEl) return;
+    
+    // Clone the SVG to avoid modifying the original
+    const svgClone = currentSvgEl.cloneNode(true);
+    
+    // Get computed styles to resolve CSS variables
+    const computedStyle = getComputedStyle(document.documentElement);
+    const colorMap = {
+      'var(--mantle)': computedStyle.getPropertyValue('--mantle').trim() || '#1e1e2e',
+      'var(--surface2)': computedStyle.getPropertyValue('--surface2').trim() || '#585b70',
+      'var(--surface1)': computedStyle.getPropertyValue('--surface1').trim() || '#45475a',
+      'var(--blue)': computedStyle.getPropertyValue('--blue').trim() || '#89b4fa',
+      'var(--green)': computedStyle.getPropertyValue('--green').trim() || '#a6e3a1',
+      'var(--yellow)': computedStyle.getPropertyValue('--yellow').trim() || '#f9e2af',
+      'var(--text)': computedStyle.getPropertyValue('--text').trim() || '#cdd6f4',
+      'var(--subtext0)': computedStyle.getPropertyValue('--subtext0').trim() || '#a6adc8'
+    };
+    
+    // Replace CSS variables with actual colors in the clone
+    const replaceColors = (element) => {
+      // Check attributes
+      ['fill', 'stroke'].forEach(attr => {
+        const value = element.getAttribute(attr);
+        if (value && colorMap[value]) {
+          element.setAttribute(attr, colorMap[value]);
+        }
+      });
+      
+      // Check style attribute
+      const style = element.getAttribute('style');
+      if (style) {
+        let newStyle = style;
+        Object.entries(colorMap).forEach(([varName, color]) => {
+          newStyle = newStyle.replace(new RegExp(varName.replace(/[()]/g, '\\$&'), 'g'), color);
+        });
+        element.setAttribute('style', newStyle);
+      }
+      
+      // Recurse through children
+      Array.from(element.children).forEach(child => replaceColors(child));
+    };
+    
+    replaceColors(svgClone);
+    
+    // Get SVG content
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    
+    // Create download link
+    const downloadLink = document.createElement('a');
+    downloadLink.href = svgUrl;
+    downloadLink.download = `breakwater-diagram-${currentConfig?.name || 'export'}.svg`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    
+    URL.revokeObjectURL(svgUrl);
+  };
+  
+  const exportPNG = () => {
+    if (!currentSvgEl) return;
+    
+    // Clone SVG to modify for export
+    const svgClone = currentSvgEl.cloneNode(true);
+    
+    // Get computed styles to resolve CSS variables
+    const computedStyle = getComputedStyle(document.documentElement);
+    const colorMap = {
+      'var(--mantle)': computedStyle.getPropertyValue('--mantle').trim() || '#1e1e2e',
+      'var(--surface2)': computedStyle.getPropertyValue('--surface2').trim() || '#585b70',
+      'var(--surface1)': computedStyle.getPropertyValue('--surface1').trim() || '#45475a',
+      'var(--blue)': computedStyle.getPropertyValue('--blue').trim() || '#89b4fa',
+      'var(--green)': computedStyle.getPropertyValue('--green').trim() || '#a6e3a1',
+      'var(--yellow)': computedStyle.getPropertyValue('--yellow').trim() || '#f9e2af',
+      'var(--text)': computedStyle.getPropertyValue('--text').trim() || '#cdd6f4',
+      'var(--subtext0)': computedStyle.getPropertyValue('--subtext0').trim() || '#a6adc8'
+    };
+    
+    // Replace CSS variables with actual colors in the clone
+    const replaceColors = (element) => {
+      // Check attributes
+      ['fill', 'stroke'].forEach(attr => {
+        const value = element.getAttribute(attr);
+        if (value && colorMap[value]) {
+          element.setAttribute(attr, colorMap[value]);
+        }
+      });
+      
+      // Check style attribute
+      const style = element.getAttribute('style');
+      if (style) {
+        let newStyle = style;
+        Object.entries(colorMap).forEach(([varName, color]) => {
+          newStyle = newStyle.replace(new RegExp(varName.replace(/[()]/g, '\\$&'), 'g'), color);
+        });
+        element.setAttribute('style', newStyle);
+      }
+      
+      // Recurse through children
+      Array.from(element.children).forEach(child => replaceColors(child));
+    };
+    
+    replaceColors(svgClone);
+    
+    // Get SVG dimensions
+    const svgWidth = parseFloat(svgClone.getAttribute('width'));
+    const svgHeight = parseFloat(svgClone.getAttribute('height'));
+    
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = svgWidth * 2; // 2x resolution for better quality
+    canvas.height = svgHeight * 2;
+    const ctx = canvas.getContext('2d');
+    
+    // Scale for high resolution
+    ctx.scale(2, 2);
+    
+    // Convert SVG to data URL
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    
+    // Create image from SVG
+    const img = new Image();
+    img.onload = () => {
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+      
+      // Export to PNG
+      canvas.toBlob((blob) => {
+        const pngUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pngUrl;
+        downloadLink.download = `breakwater-diagram-${currentConfig?.name || 'export'}.png`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        URL.revokeObjectURL(pngUrl);
+        URL.revokeObjectURL(url);
+      });
+    };
+    
+    img.src = url;
+  };
   
   const render = (config) => {
     if (!config) return;
+    currentConfig = config;
     
     // Check if breakwater is enabled
     const breakwaterEnabled = config.breakwater?.enable !== false;
@@ -34,7 +185,19 @@ export function createBreakwaterDiagram(container, configStore) {
     }
     
     const diagramTitle = breakwaterEnabled ? 'Breakwater Cross-Section' : 'Wave Channel Cross-Section';
-    container.innerHTML = `<h3>${diagramTitle}</h3>`;
+    container.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0;">${diagramTitle}</h3>
+        <div class="export-buttons" style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" id="export-svg-btn" title="Export as SVG">
+            ${icon('download', 16)} SVG
+          </button>
+          <button class="btn btn-secondary btn-sm" id="export-png-btn" title="Export as PNG">
+            ${icon('download', 16)} PNG
+          </button>
+        </div>
+      </div>
+    `;
     
     // SVG dimensions and margins
     const margin = { top: 20, right: 20, bottom: 40, left: 40 };
@@ -421,9 +584,16 @@ export function createBreakwaterDiagram(container, configStore) {
     
     overlayEl.appendChild(overlayG);
     
+    // Store the SVG element for export
+    currentSvgEl = svgEl;
+    
     svgContainer.appendChild(svgEl);
     svgContainer.appendChild(overlayEl);
     container.appendChild(svgContainer);
+    
+    // Attach export button event listeners
+    document.getElementById('export-svg-btn')?.addEventListener('click', exportSVG);
+    document.getElementById('export-png-btn')?.addEventListener('click', exportPNG);
     
     // Set initial scroll position centered on the breakwater after DOM update
     requestAnimationFrame(() => {
