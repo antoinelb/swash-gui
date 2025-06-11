@@ -1,0 +1,130 @@
+$ SWASH Input File - 1D Wave Channel Experiment
+$ model001_with_breakwater_and_vegetation
+
+PROJECT 'WaveChannel' '8e6'
+
+$=============================================================================
+$ MODEL SETUP
+$=============================================================================
+$ Freshwater properties, standard gravity
+SET level=1.2375 grav=9.81 rhowat=1000.0
+
+$ 1D nonstationary simulation
+MODE NONSTATIONARY ONEDIMENSIONAL
+
+$=============================================================================
+$ COMPUTATIONAL GRID
+$=============================================================================
+$ 1D grid: length=112.0m, cells=500
+CGRID REGULAR 0.0 0.0 0.0 112.0 0.0 500 0
+
+$ Vertical layers=2 (equidistant)
+VERTICAL 2
+
+$=============================================================================
+$ BATHYMETRY
+$=============================================================================
+INPGRID BOTTOM REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP BOTTOM 1.0 'bathymetry.txt' IDLA=3 FREE
+$=============================================================================
+$ BREAKWATER POROSITY
+$=============================================================================
+$ Breakwater: 70.0m to 74.6m, slope=1.75:1
+
+INPGRID POROSITY REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP POROSITY 1.0 'porosity.txt' IDLA=3 FREE
+
+INPGRID HSTRUCTURE REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP HSTRUCTURE 1.0 'structure_height.txt' IDLA=3 FREE
+
+$ Porosity parameters for rock: Dn50=0.3931m, height=0.9167m
+POROSITY 0.3931 0.9167 200.0 1.1 8.0
+$=============================================================================
+$ VEGETATION
+$=============================================================================
+$ Two vegetation types on breakwater crest: alternating distribution
+$ Type 1: height=0.5m, diameter=0.02m, density=50.0/m², drag=1.2
+$ Type 2: height=0.3m, diameter=0.015m, density=50.0/m², drag=1.0
+$ Distribution: 50.0% type 1, 50.0% type 2
+INPGRID NPLANTS REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+READINP NPLANTS 1.0 'vegetation_density.txt' IDLA=3 FREE
+$ Using the taller vegetation as base (SWASH will use max of both types)
+VEGETATION 0.5 0.02 1 1.2
+
+$=============================================================================
+$ WAVE GENERATION
+$=============================================================================
+$ Regular waves: H=0.25m, T=8.0s
+BOUNDCOND SIDE WEST BTYPE WEAKREFL &
+          CON REGULAR 0.25 8.0 0.0
+
+$ Sponge layer at downstream end
+SPONGE EAST 10.0
+
+$=============================================================================
+$ PHYSICS
+$=============================================================================
+$ Manning friction n=0.019
+FRICTION MANNING 0.019
+
+$ Wave breaking for coarse vertical resolution
+BREAKING 0.6 0.3
+
+$=============================================================================
+$ NUMERICS  
+$=============================================================================
+$ Non-hydrostatic with Box scheme (optimal for 2-3 layers)
+NONHYDROSTATIC BOX 1.0
+
+$ Adaptive time stepping: CFL 0.4-0.8
+TIMEINT METH EXPLICIT 0.4 0.8
+
+$=============================================================================
+$ OUTPUT
+$=============================================================================
+$ Wave gauges
+POINTS 'WG01' 20.0 0.0
+POINTS 'WG02' 30.0 0.0
+POINTS 'WG03' 50.0 0.0
+POINTS 'WG04' 70.0 0.0
+POINTS 'WG05' 72.3 0.0
+POINTS 'WG06' 74.6 0.0
+POINTS 'WG07' 80.0 0.0
+POINTS 'WG08' 90.0 0.0
+POINTS 'WG09' 100.0 0.0
+
+$ Time series output
+TABLE 'WG01' NOHEADER 'wg01.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG02' NOHEADER 'wg02.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG03' NOHEADER 'wg03.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG04' NOHEADER 'wg04.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG05' NOHEADER 'wg05.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG06' NOHEADER 'wg06.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG07' NOHEADER 'wg07.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG08' NOHEADER 'wg08.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+TABLE 'WG09' NOHEADER 'wg09.txt' &
+      WATLEV VEL OUTPUT 000000.000 0.1 SEC
+
+$ Wave statistics (last 30 minutes by default)
+QUANTITY HSIG dur=1800 sec
+QUANTITY SETUP dur=1800 sec
+
+$ Spatial output at end
+FRAME 'channel' 0.0 0.0 0.0 112.0 1.0 125 1
+BLOCK 'channel' NOHEADER 'final_state.mat' LAY-OUT 3 &
+      WATLEV VEL HSIG SETUP OUTPUT 000000.000 0.1 SEC
+
+$=============================================================================
+$ RUN
+$=============================================================================
+COMPUTE 000000.000 0.05 SEC 000800.000
+
+STOP
