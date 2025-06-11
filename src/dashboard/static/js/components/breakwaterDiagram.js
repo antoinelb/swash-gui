@@ -255,7 +255,10 @@ export function createBreakwaterDiagram(container, configStore) {
     const visibleLength = visibleEnd - visibleStart;
     
     // Use same scale for both axes to maintain correct proportions
-    const maxHeight = breakwaterEnabled ? Math.max(config.water.water_level + 2, breakwaterHeight + 1) : Math.max(3.0, config.water.water_level + 1);
+    // Ensure the diagram shows at least the water level and structure with sufficient margin
+    const vegetationHeight = config.vegetation?.enable ? 0.5 : 0; // meters, not pixels
+    const structureTotalHeight = breakwaterEnabled ? (breakwaterHeight + vegetationHeight) : 0;
+    const maxHeight = breakwaterEnabled ? Math.max(config.water.water_level + 2, structureTotalHeight + 1.5) : Math.max(3.0, config.water.water_level + 1);
     const availableWidth = containerWidth - margin.left - margin.right;
     
     // Calculate scale to fit visible area in container
@@ -384,8 +387,9 @@ export function createBreakwaterDiagram(container, configStore) {
       
       // Add vegetation if enabled
       if (config.vegetation?.enable) {
-        const vegetationHeight = 8; // Fixed vegetation visualization height in pixels
-        const vegetationY = bwY - vegetationHeight;
+        const vegetationHeightMeters = 0.5; // Vegetation height in meters
+        const vegetationHeightPixels = vegetationHeightMeters * scale; // Convert to pixels
+        const vegetationY = bwY - vegetationHeightPixels;
         
         if (config.vegetation.other_type) {
           // Two vegetation types
@@ -397,7 +401,7 @@ export function createBreakwaterDiagram(container, configStore) {
               x: crestStart,
               y: vegetationY,
               width: crestMid - crestStart,
-              height: vegetationHeight,
+              height: vegetationHeightPixels,
               fill: 'var(--green)',
               opacity: 0.7
             }));
@@ -407,26 +411,26 @@ export function createBreakwaterDiagram(container, configStore) {
               x: crestMid,
               y: vegetationY,
               width: crestEnd - crestMid,
-              height: vegetationHeight,
+              height: vegetationHeightPixels,
               fill: 'var(--yellow)',
               opacity: 0.7
             }));
             
-            // Vegetation type labels
+            // Vegetation type labels - position them above the vegetation with adequate spacing
             g.appendChild(svg('text', {
               x: (crestStart + crestMid) / 2,
-              y: vegetationY - 5,
+              y: vegetationY - 8,
               'text-anchor': 'middle',
               fill: 'var(--green)',
-              'font-size': '10'
+              'font-size': '11'
             }, ['Type 1']));
             
             g.appendChild(svg('text', {
               x: (crestMid + crestEnd) / 2,
-              y: vegetationY - 5,
+              y: vegetationY - 8,
               'text-anchor': 'middle',
               fill: 'var(--yellow)',
-              'font-size': '10'
+              'font-size': '11'
             }, ['Type 2']));
             
           } else {
@@ -438,7 +442,7 @@ export function createBreakwaterDiagram(container, configStore) {
                 x: x,
                 y: vegetationY,
                 width: Math.min(patternWidth, crestEnd - x),
-                height: vegetationHeight,
+                height: vegetationHeightPixels,
                 fill: 'var(--green)',
                 opacity: 0.7
               }));
@@ -449,20 +453,20 @@ export function createBreakwaterDiagram(container, configStore) {
                   x: x + patternWidth,
                   y: vegetationY,
                   width: Math.min(patternWidth, crestEnd - x - patternWidth),
-                  height: vegetationHeight,
+                  height: vegetationHeightPixels,
                   fill: 'var(--yellow)',
                   opacity: 0.7
                 }));
               }
             }
             
-            // Single label for mixed vegetation
+            // Single label for mixed vegetation - position above with adequate spacing
             g.appendChild(svg('text', {
               x: (crestStart + crestEnd) / 2,
-              y: vegetationY - 5,
+              y: vegetationY - 8,
               'text-anchor': 'middle',
               fill: 'var(--green)',
-              'font-size': '10'
+              'font-size': '11'
             }, ['Mixed Vegetation']));
           }
         } else {
@@ -476,13 +480,13 @@ export function createBreakwaterDiagram(container, configStore) {
             opacity: 0.7
           }));
           
-          // Vegetation label
+          // Vegetation label - position above with adequate spacing
           g.appendChild(svg('text', {
             x: (crestStart + crestEnd) / 2,
-            y: vegetationY - 5,
+            y: vegetationY - 8,
             'text-anchor': 'middle',
             fill: 'var(--green)',
-            'font-size': '10'
+            'font-size': '11'
           }, ['Vegetation']));
         }
         
@@ -498,10 +502,10 @@ export function createBreakwaterDiagram(container, configStore) {
         'font-size': '14'
       }, [`Breakwater: ${breakwaterStart.toFixed(1)}m - ${breakwaterEnd.toFixed(1)}m`]));
       
-      // Height dimensions
+      // Height dimensions - position right under the crest
       g.appendChild(svg('text', {
         x: (bwStart + bwEnd) / 2,
-        y: bwY - 10,
+        y: bwY + 15,
         'text-anchor': 'middle',
         fill: 'var(--subtext0)',
         'font-size': '12'
@@ -526,9 +530,15 @@ export function createBreakwaterDiagram(container, configStore) {
         // Only show gauges within the diagram bounds
         if (pos < fullDiagramStart || pos > fullDiagramEnd) return;
         const x = (pos - fullDiagramStart) * scale;
+        
+        // Extend gauge lines to a moderate height above water
+        // Original was waterY - 10, full extension was 0.2 * actualPlotHeight
+        // So halfway between those positions
+        const gaugeTop = waterY - ((waterY - actualPlotHeight * 0.2) / 2);
+        
         g.appendChild(svg('line', {
           x1: x,
-          y1: waterY - 10,
+          y1: gaugeTop,
           x2: x,
           y2: actualPlotHeight,
           stroke: 'var(--yellow)',
@@ -537,7 +547,7 @@ export function createBreakwaterDiagram(container, configStore) {
         }));
         g.appendChild(svg('text', {
           x: x,
-          y: waterY - 15,
+          y: gaugeTop - 5,
           'text-anchor': 'middle',
           fill: 'var(--yellow)',
           'font-size': '10'
