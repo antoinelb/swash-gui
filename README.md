@@ -82,7 +82,7 @@ pip install -e .
 
 ```bash
 # Test Python framework
-python -m src.cli --help
+swg --help
 
 # Test SWASH installation
 swash --version
@@ -94,7 +94,7 @@ swash --version
 
 ```bash
 # Create a new configuration file
-python -m src.cli create config/my-experiment.yml
+swg create config/my-experiment.yml
 ```
 
 This creates a YAML file with default parameters that you can edit:
@@ -125,7 +125,7 @@ numeric:
 
 ```bash
 # Start the interactive dashboard
-python -m src.cli dashboard
+swg dashboard
 ```
 
 Open your browser to [http://localhost:8000](http://localhost:8000) to:
@@ -138,10 +138,10 @@ Open your browser to [http://localhost:8000](http://localhost:8000) to:
 
 ```bash
 # Run a single simulation
-python -m src.cli run config/my-experiment.yml
+swg run config/my-experiment.yml
 
 # Run multiple configurations
-python -m src.cli run config/*.yml
+swg run config/*.yml
 ```
 
 ## Configuration Reference
