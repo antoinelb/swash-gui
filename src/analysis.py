@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.subplots
 import polars as pl
 
 from src.utils.plotting import colours, template
@@ -47,8 +46,8 @@ def _find_timestep(path: Path) -> float:
     path = path / "swash" / "INPUT"
     with open(path) as f:
         for line in f:
-            if line.startswith("COMPUTE"):
-                timestep = float(line.split()[2])
+            if line.strip().startswith("WATLEV"):
+                timestep = float(line.split()[4])
                 break
     return timestep
 
