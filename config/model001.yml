@@ -26,7 +26,7 @@ vegetation: # configuration for the vegetation on the breakwater
     plant_density: 50.0
     drag_coefficient: 1.2
   other_type: # Optional second vegetation type
-  distribution: half # Distribution pattern: 'half' (seaward/leeward), 'alternating', or 'custom'
+  distribution: half # Distribution pattern: 'half' (seaward/leeward) or 'alternating'
   type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
 numeric: # configuration for the numerical parameters
   hash: d940923e  # Hash of the configuration (automatically generated)
