@@ -1,0 +1,39 @@
+hash: c75125ff  # hash of the config (automatically modified)
+grid: # computational grid configuration
+  hash: 44136fa3  # Hash of the configuration (automatically generated)
+water: # configuration for the water in the channel
+  hash: cb8a2ba9  # Hash of the configuration (automatically generated)
+  water_level: 1.0 # Still water level (m)
+  water_density: 1000.0 # Density of water (kg/m^3)
+  wave_height: 0.1 # Wave height for regular waves (m)
+  wave_period: 2.5 # Wave period for regular waves (s)
+breakwater: # breakwater configuration
+  hash: 33bd44c8  # Hash of the configuration (automatically generated)
+  enable: true # Enable breakwater in the simulation
+  crest_height: 2.0 # Height of the crest from the floor (m)
+  crest_length: 2.0 # Length of the crest (m)
+  slope: 2.0 # Slope of the breakwater sides (H:V ratio)
+  porosity: 0.4 # Porosity of the breakwater (0-1)
+  stone_density: 2600.0 # Density of the stones (kg/m^3)
+  armour_dn50: 1.15 # Median diameter of armour stones (m)
+  breakwater_start_position: 70.0 # Start position of the breakwater (m)
+vegetation: # configuration for the vegetation on the breakwater
+  hash: a83879de  # Hash of the configuration (automatically generated)
+  enable: true # Enable vegetation on the breakwater crest
+  type: # Primary vegetation type
+    plant_height: 0.5
+    plant_diameter: 0.02
+    plant_density: 50.0
+    drag_coefficient: 1.2
+  other_type: # Optional second vegetation type
+  distribution: half # Distribution pattern: 'half' (seaward/leeward) or 'alternating'
+  type_fraction: 0.5 # Fraction of crest width occupied by primary vegetation type (0-1)
+numeric: # configuration for the numerical parameters
+  hash: 8ccd36a3  # Hash of the configuration (automatically generated)
+  n_waves: 50 # Number of waves to simulate
+  wave_gauge_positions: # X-positions of wave gauges (m)
+  - 20.0
+  - 60.0
+  - 65.0
+  - 80.0
+  - 100.0
