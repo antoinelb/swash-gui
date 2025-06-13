@@ -139,6 +139,35 @@ export function createConfigDetailView(configName) {
   <div class="analysis-plot">
     <div id="wave-envelope-plot" style="width: 100%; height: 500px;"></div>
   </div>
+  ${analysis.wave_stats ? `
+  <div class="wave-statistics">
+    <h4>Wave Statistics by Gauge</h4>
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>Position (m)</th>
+          <th>Significant Wave Height (m)</th>
+          <th>Mean Wave Height (m)</th>
+          <th>Max Wave Height (m)</th>
+          <th>Number of Waves</th>
+          <th>Mean Period (s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${analysis.wave_stats.map(stat => `
+          <tr>
+            <td>${stat.position.toFixed(1)}</td>
+            <td>${stat.significant_wave_height.toFixed(3)}</td>
+            <td>${stat.mean_wave_height.toFixed(3)}</td>
+            <td>${stat.max_wave_height.toFixed(3)}</td>
+            <td>${stat.n_waves}</td>
+            <td>${stat.mean_period.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+  ` : ''}
 </div>
 `;
 

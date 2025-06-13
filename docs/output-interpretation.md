@@ -22,7 +22,8 @@ simulations/experiment_name_hash/
 │   └── final_state.mat     # Final spatial state
 └── analysis/               # Post-processed results
     ├── water_levels_and_x_velocity.png # Visualization
-    └── water_levels_and_x_velocity.json # Visualization data for dashboard
+    ├── water_levels_and_x_velocity.json # Visualization data for dashboard
+    └── wave_statistics.csv     # Wave height analysis by gauge
 ```
 
 ## Primary Output Files
@@ -178,19 +179,87 @@ timestep,water_level,x_velocity,y_velocity,position
 - $H_{sig}$: Significant wave height distribution
 - Setup: Mean water level changes
 
-### Traditional Coastal Engineering Metrics
-
-**Wave Heights (not currently calculated):**
+**Individual Wave Analysis (wave_statistics.csv):**
 - **$H_{1/3}$**: Significant wave height (average of highest 1/3 waves)
 - **$H_{rms}$**: Root-mean-square wave height
 - **$H_{max}$**: Maximum individual wave height
+- **$H_{mean}$**: Mean wave height
+- **$T_{mean}$**: Mean wave period from zero-crossing analysis
+- **$N_{waves}$**: Number of detected waves
 
-**Wave Periods (not currently calculated):**
+### Wave Height Metrics Explained
+
+#### Significant Wave Height ($H_{1/3}$ or $H_s$)
+
+**Definition:** The average height of the highest one-third of waves in a time series.
+
+**Calculation Method:**
+1. Detect individual waves using zero-crossing analysis
+2. Measure each wave height (trough-to-crest distance)
+3. Sort wave heights in descending order
+4. Average the highest 33% of waves
+
+**Physical Meaning:**
+- Approximates what a trained observer would report as "wave height"
+- Most commonly used parameter in coastal engineering design
+- Historically derived from visual wave observations
+- For Rayleigh-distributed seas: $H_{1/3} \approx 1.6 \times H_{rms}$
+
+#### Root-Mean-Square Wave Height ($H_{rms}$)
+
+**Definition:** The square root of the mean of squared individual wave heights.
+
+**Calculation Method:**
+$$H_{rms} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} H_i^2}$$
+
+**Physical Meaning:**
+- Directly related to total wave energy: $E \propto H_{rms}^2$
+- Considers all waves equally (not just the largest)
+- More sensitive to smaller waves than $H_{1/3}$
+- Better represents the energy content of the wave field
+
+#### Zero-Crossing Analysis
+
+**Method:** Wave detection algorithm that identifies individual waves by:
+1. Removing the mean water level to center data around zero
+2. Finding points where the signal crosses zero
+3. Separating upward and downward crossings
+4. Measuring wave heights and periods between consecutive upward crossings
+
+**Advantages:**
+- Standard method in oceanography
+- Robust for irregular waves
+- Provides both height and period statistics
+- Computationally efficient
+
+### Wave Statistics Output Format
+
+**File:** `analysis/wave_statistics.csv`
+
+**Columns:**
+- **position**: Wave gauge x-coordinate (m)
+- **significant_wave_height**: $H_{1/3}$ (m)
+- **mean_wave_height**: $H_{mean}$ (m)
+- **max_wave_height**: $H_{max}$ (m)
+- **rms_wave_height**: $H_{rms}$ (m)
+- **n_waves**: Number of detected waves
+- **mean_period**: $T_{mean}$ (s)
+
+**Example:**
+```csv
+position,significant_wave_height,mean_wave_height,max_wave_height,rms_wave_height,n_waves,mean_period
+20.0,0.456,0.389,0.612,0.401,47,2.13
+60.0,0.234,0.198,0.334,0.208,51,2.09
+80.0,0.189,0.165,0.267,0.172,48,2.08
+```
+
+### Not Yet Implemented
+
+**Wave Periods:**
 - **$T_p$**: Peak period from spectral analysis
-- **$T_z$**: Zero-crossing period
 - **$T_{1/3}$**: Period of significant waves
 
-**Transformation Coefficients (not currently calculated):**
+**Transformation Coefficients:**
 - **$K_t$**: Transmission coefficient (transmitted/incident energy)
 - **$K_r$**: Reflection coefficient (reflected/incident energy)
 - **$K_d$**: Dissipation coefficient ($1 - K_t - K_r$)

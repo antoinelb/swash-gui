@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import polars as pl
 
 from src.utils.plotting import colours, template
+from src.wave_analysis import calculate_wave_statistics_for_gauges
 
 from .config import Config
 
@@ -33,8 +34,19 @@ def analyze_simulation(simulation_dir: Path, config: Config) -> dict:
     data = _read_simulaton_data(config, timestep, simulation_dir)
     _plot_water_levels_and_x_velocities(data, config, timestep, simulation_dir)
 
+    # Calculate wave statistics
+    wave_stats = calculate_wave_statistics_for_gauges(data, timestep)
+
+    # Save wave statistics to CSV
+    analysis_dir = simulation_dir / "analysis"
+    analysis_dir.mkdir(exist_ok=True)
+    wave_stats.write_csv(analysis_dir / "wave_statistics.csv")
+
     plot_file = simulation_dir / "analysis" / "water_levels_and_x_velocity.png"
-    return {"plot_file": str(plot_file) if plot_file.exists() else ""}
+    return {
+        "plot_file": str(plot_file) if plot_file.exists() else "",
+        "wave_stats": wave_stats.to_dicts(),
+    }
 
 
 ############

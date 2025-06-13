@@ -232,8 +232,19 @@ async def get_analysis_results(request: Request) -> JSONResponse:
 
         with open(plot_file, "r") as f:
             plot_data = json.load(f)
+        
+        # Load wave statistics if available
+        wave_stats_file = analysis_dir / "wave_statistics.csv"
+        wave_stats = None
+        if wave_stats_file.exists():
+            import polars as pl
+            wave_stats_df = pl.read_csv(wave_stats_file)
+            wave_stats = wave_stats_df.to_dicts()
 
-        return JSONResponse({"plot_data": plot_data})
+        return JSONResponse({
+            "plot_data": plot_data,
+            "wave_stats": wave_stats
+        })
     except Exception as e:
         print(f"Error getting analysis results for {name}: {e}")
         traceback.print_exc()

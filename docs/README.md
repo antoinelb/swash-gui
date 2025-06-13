@@ -41,8 +41,8 @@ config.yml    Pydantic      Jinja2 INPUT         swash.exe     Python plots
 
 4. **Analysis Tools** (`src/analysis.py`)
    - Automated post-processing
-   - Wave statistics calculation
-   - Visualization generation
+   - Wave height analysis (H₁/₃, Hrms, individual wave detection)
+   - Time series visualization and dashboard integration
 
 5. **User Interfaces**
    - CLI (`swg`) for batch processing
@@ -92,7 +92,8 @@ simulations/
     │   └── data.csv        # Combined data for all gauges
     └── analysis/           # Post-processing results
         ├── *.png           # Plots
-        └── *.json          # Extracted data
+        ├── *.json          # Extracted data
+        └── wave_statistics.csv # Wave height metrics by gauge
 ```
 
 ## Integration with SWASH
