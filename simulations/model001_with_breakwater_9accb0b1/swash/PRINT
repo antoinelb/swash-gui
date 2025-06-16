@@ -1,6 +1,6 @@
 1
 
-                    Execution started at 20250612.095306         
+                    Execution started at 20250616.085340         
 
 
 
@@ -76,6 +76,8 @@
     
  $ Breakwater: 70.0m to 74.6m, slope=1.75:1
     
+ $ Breakwater profile integrated into bathymetry, porosity applied to structure areas
+    
  
     
  INPGRID POROSITY REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
@@ -84,15 +86,9 @@
     
  
     
- INPGRID HSTRUCTURE REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
+ $ Porosity parameters for rock: Dn50=0.3931m
     
- READINP HSTRUCTURE 1.0 'structure_height.txt' IDLA=3 FREE
-    
- 
-    
- $ Porosity parameters for rock: Dn50=0.3931m, height=0.9167m
-    
- POROSITY 0.3931 0.9167 200.0 1.1 8.0
+ POROSITY 0.3931 99999 200.0 1.1 8.0
     
  
     
