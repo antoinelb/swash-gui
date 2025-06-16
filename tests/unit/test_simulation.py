@@ -29,14 +29,12 @@ class TestRunSimulation:
         # Mock all the file creation functions
         mock_create_bathymetry = Mock()
         mock_create_porosity = Mock()
-        mock_create_structure = Mock()
         mock_create_vegetation = Mock()
         mock_create_input = Mock()
         mock_execute_swash = Mock(return_value=True)
         
         monkeypatch.setattr("src.simulation._create_bathymetry_file", mock_create_bathymetry)
         monkeypatch.setattr("src.simulation._create_porosity_file", mock_create_porosity)
-        monkeypatch.setattr("src.simulation._create_structure_height_file", mock_create_structure)
         monkeypatch.setattr("src.simulation._create_vegetation_file", mock_create_vegetation)
         monkeypatch.setattr("src.simulation._create_input_file", mock_create_input)
         monkeypatch.setattr("src.simulation._execute_swash", mock_execute_swash)
@@ -49,7 +47,6 @@ class TestRunSimulation:
         # Verify file creation functions were called
         mock_create_bathymetry.assert_called_once()
         mock_create_porosity.assert_called_once()
-        mock_create_structure.assert_called_once()
         mock_create_vegetation.assert_called_once()
         mock_create_input.assert_called_once()
         mock_execute_swash.assert_called_once()
@@ -100,7 +97,6 @@ class TestRunSimulation:
         # Mock successful simulation but failing analysis
         monkeypatch.setattr("src.simulation._create_bathymetry_file", Mock())
         monkeypatch.setattr("src.simulation._create_porosity_file", Mock())
-        monkeypatch.setattr("src.simulation._create_structure_height_file", Mock())
         monkeypatch.setattr("src.simulation._create_vegetation_file", Mock())
         monkeypatch.setattr("src.simulation._create_input_file", Mock())
         monkeypatch.setattr("src.simulation._execute_swash", Mock(return_value=True))
@@ -122,11 +118,18 @@ class TestCreateBathymetryFile:
         bathymetry_file = tmp_path / "bathymetry.txt"
         assert bathymetry_file.exists()
         
-        # Check content - should be all zeros
+        # Check content - should include breakwater profile when enabled
         data = np.loadtxt(bathymetry_file)
         expected_length = full_config.grid.nx_cells + 1
         assert len(data) == expected_length
-        assert np.all(data == 0.0)
+        
+        if full_config.breakwater.enable:
+            # Should have non-zero elevations where breakwater exists
+            assert np.max(data) > 0.0
+            assert np.max(data) == full_config.breakwater.crest_height
+        else:
+            # Should be all zeros if no breakwater
+            assert np.all(data == 0.0)
 
 
 class TestCreatePorosityFile:
@@ -155,30 +158,6 @@ class TestCreatePorosityFile:
         assert np.all(data[~breakwater_mask] == 1.0)
 
 
-class TestCreateStructureHeightFile:
-    def test_create_structure_height_file(
-        self, full_config: config.Config, tmp_path: Path
-    ) -> None:
-        """Test structure height file creation."""
-        simulation._create_structure_height_file(full_config, simulation_dir=tmp_path)
-        
-        height_file = tmp_path / "structure_height.txt"
-        assert height_file.exists()
-        
-        data = np.loadtxt(height_file)
-        expected_length = full_config.grid.nx_cells + 1
-        assert len(data) == expected_length
-        
-        # Check that values within breakwater range have correct height
-        x = np.linspace(0, full_config.grid.length, full_config.grid.nx_cells + 1)
-        breakwater_mask = (x >= full_config.breakwater.breakwater_start_position) & (
-            x <= full_config.breakwater_end_position
-        )
-        
-        # Breakwater region should have crest height
-        assert np.all(data[breakwater_mask] == full_config.breakwater.crest_height)
-        # Outside breakwater should have height of 0.0
-        assert np.all(data[~breakwater_mask] == 0.0)
 
 
 class TestCreateVegetationFile:
