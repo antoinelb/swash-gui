@@ -34,7 +34,6 @@ def run_simulation(config: Config) -> None:
     _create_bathymetry_file(config, simulation_dir=swash_dir)
     if config.breakwater.enable:
         _create_porosity_file(config, simulation_dir=swash_dir)
-        _create_structure_height_file(config, simulation_dir=swash_dir)
         if config.vegetation.enable:
             _create_vegetation_file(config, simulation_dir=swash_dir)
     _create_input_file(
@@ -64,13 +63,45 @@ def run_simulation(config: Config) -> None:
 
 
 def _create_bathymetry_file(config: Config, *, simulation_dir: Path) -> None:
-    """Create bathymetry file with flat bottom.
+    """Create bathymetry file with breakwater profile integrated.
 
     The bathymetry file contains bottom elevation values at each grid point.
-    For a flat bottom, all values are 0.0.
+    If breakwater is enabled, the breakwater profile is integrated into the bathymetry
+    with sloped sides and flat crest. Otherwise, flat bottom at elevation 0.0.
     """
     x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
     bottom = np.zeros_like(x)
+
+    if config.breakwater.enable:
+        # Calculate breakwater geometry
+        start_pos = config.breakwater.breakwater_start_position
+        crest_height = config.breakwater.crest_height
+        crest_length = config.breakwater.crest_length
+        slope = config.breakwater.slope  # H:V ratio
+
+        # Calculate key positions
+        seaward_toe = start_pos
+        seaward_shoulder = start_pos + crest_height * slope
+        leeward_shoulder = seaward_shoulder + crest_length
+        leeward_toe = leeward_shoulder + crest_height * slope
+
+        # Create breakwater profile
+        for i, x_pos in enumerate(x):
+            if seaward_toe <= x_pos <= seaward_shoulder:
+                # Seaward slope: linear rise from 0 to crest_height
+                progress = (x_pos - seaward_toe) / (
+                    seaward_shoulder - seaward_toe
+                )
+                bottom[i] = progress * crest_height
+            elif seaward_shoulder < x_pos < leeward_shoulder:
+                # Flat crest at crest_height
+                bottom[i] = crest_height
+            elif leeward_shoulder <= x_pos <= leeward_toe:
+                # Leeward slope: linear drop from crest_height to 0
+                progress = (x_pos - leeward_shoulder) / (
+                    leeward_toe - leeward_shoulder
+                )
+                bottom[i] = crest_height * (1 - progress)
 
     output_path = simulation_dir / "bathymetry.txt"
     np.savetxt(output_path, bottom, fmt="%.3f")
@@ -93,26 +124,6 @@ def _create_porosity_file(config: Config, *, simulation_dir: Path) -> None:
 
     output_path = simulation_dir / "porosity.txt"
     np.savetxt(output_path, porosity, fmt="%.3f")
-
-
-def _create_structure_height_file(
-    config: Config, *, simulation_dir: Path
-) -> None:
-    """Create structure height file for the breakwater.
-
-    The structure height file contains the height of the porous structure
-    at each grid point.
-    """
-    x = np.linspace(0, config.grid.length, config.grid.nx_cells + 1)
-    structure_height = np.zeros_like(x)
-
-    breakwater_mask = (x >= config.breakwater.breakwater_start_position) & (
-        x <= config.breakwater_end_position
-    )
-    structure_height[breakwater_mask] = config.breakwater.crest_height
-
-    output_path = simulation_dir / "structure_height.txt"
-    np.savetxt(output_path, structure_height, fmt="%.3f")
 
 
 def _create_vegetation_file(config: Config, *, simulation_dir: Path) -> None:
