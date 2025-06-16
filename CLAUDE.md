@@ -112,3 +112,7 @@ Configurations use hierarchical validation with automatic hash generation. When 
 
 ## Web Scraping and Automation Guidelines
 - Always close browser tabs/puppeteer browser instances after task completion to free up system resources
+
+## Memory Guidelines
+- Remove config files used for implementing a feature once done
+- Run the clean command (`swg clean`) after removing config files to remove created simulations
