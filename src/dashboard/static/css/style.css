@@ -45,6 +45,49 @@ body {
   padding: 24px;
 }
 
+/* Tab Styles */
+.tab-container {
+  background: var(--mantle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--surface1);
+}
+
+.tab-button {
+  background: var(--surface0);
+  border: none;
+  color: var(--subtext0);
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.tab-button:hover {
+  background: var(--surface1);
+  color: var(--text);
+}
+
+.tab-button.active {
+  background: var(--blue);
+  color: var(--base);
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 /* Analysis Results Styles */
 .analysis-content {
   display: flex;
