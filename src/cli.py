@@ -232,7 +232,7 @@ def _analyze(
                 plot_file = analysis_results.get("plot_file", "")
                 if plot_file:
                     done_print(
-                        f"Analysis complete - wave envelope plot saved to analysis/"
+                        "Analysis complete - wave envelope plot saved to analysis/"
                     )
                 else:
                     done_print("Analysis complete")

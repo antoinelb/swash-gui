@@ -40,7 +40,18 @@ export function createConfigDetailView(configName) {
 
 <div class="config-detail">
   <div id="diagram" class="panel">
-    <div id="diagram-content"></div>
+    <div class="tab-container">
+      <div class="tab-nav">
+        <button class="tab-button active" data-tab="config-diagram">Config Diagram</button>
+        <button class="tab-button" data-tab="swash-diagram">SWASH Diagram</button>
+      </div>
+      <div id="config-diagram" class="tab-content active">
+        <div id="diagram-content"></div>
+      </div>
+      <div id="swash-diagram" class="tab-content">
+        <div id="swash-diagram-content" style="width: 100%; height: 500px;"></div>
+      </div>
+    </div>
   </div>
   <div id="analysis" class="panel">
     <h3>Analysis Results</h3>
@@ -57,6 +68,11 @@ export function createConfigDetailView(configName) {
     document.getElementById('save-btn')?.addEventListener('click', saveConfig);
     document.getElementById('run-btn')?.addEventListener('click', runSimulation);
     document.getElementById('delete-btn')?.addEventListener('click', deleteConfig);
+    
+    // Attach tab event listeners
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => switchTab(button.dataset.tab));
+    });
   };
 
   const toggleEdit = () => {
@@ -111,10 +127,75 @@ export function createConfigDetailView(configName) {
     }
   };
 
+  const switchTab = (tabName) => {
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    document.getElementById(tabName).classList.add('active');
+    
+    // Load SWASH diagram if switching to that tab
+    if (tabName === 'swash-diagram' && !document.getElementById('swash-diagram-content').hasChildNodes()) {
+      loadSwashDiagram();
+    }
+  };
+
+  const loadSwashDiagram = async () => {
+    try {
+      const analysis = await api.getAnalysisResults(configName);
+      if (analysis.swash_plot_data && window.Plotly) {
+        const config = {
+          responsive: true,
+          displayModeBar: true,
+          modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+          toImageButtonOptions: {
+            format: 'png',
+            filename: 'swash_cross_section',
+            height: 500,
+            width: 1000,
+            scale: 2
+          }
+        };
+
+        // Apply Catppuccin theming to layout
+        const layout = {
+          ...analysis.swash_plot_data.layout,
+          modebar: {
+            bgcolor: 'rgba(49, 50, 68, 0.8)',
+            color: '#cdd6f4',
+            activecolor: '#89b4fa'
+          }
+        };
+
+        window.Plotly.newPlot('swash-diagram-content', analysis.swash_plot_data.data, layout, config);
+      } else {
+        document.getElementById('swash-diagram-content').innerHTML = `
+          <p style="color: var(--subtext0); text-align: center; padding: 40px;">
+            SWASH diagram not available. Run simulation to generate data.
+          </p>
+        `;
+      }
+    } catch (error) {
+      document.getElementById('swash-diagram-content').innerHTML = `
+        <p style="color: var(--red); text-align: center; padding: 40px;">
+          Error loading SWASH diagram: ${error.message}
+        </p>
+      `;
+    }
+  };
+
   const loadAnalysisResults = async () => {
     try {
       const analysis = await api.getAnalysisResults(configName);
       renderAnalysisResults(analysis);
+      // Clear SWASH diagram so it reloads if user switches tabs
+      document.getElementById('swash-diagram-content').innerHTML = '';
     } catch (error) {
       renderAnalysisResults({ error: error.message });
     }
