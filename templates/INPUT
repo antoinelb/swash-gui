@@ -33,15 +33,13 @@ $ BREAKWATER POROSITY
 $=============================================================================
 {%- set breakwater_end = breakwater.breakwater_start_position + breakwater.crest_length + 2 * (breakwater.crest_height * breakwater.slope) %}
 $ Breakwater: {{ breakwater.breakwater_start_position }}m to {{ "%.1f"|format(breakwater_end) }}m, slope={{ breakwater.slope }}:1
+$ Breakwater profile integrated into bathymetry, porosity applied to structure areas
 
 INPGRID POROSITY REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
 READINP POROSITY 1.0 'porosity.txt' IDLA=3 FREE
 
-INPGRID HSTRUCTURE REGULAR 0.0 0.0 0.0 500 0 0.224 1.0
-READINP HSTRUCTURE 1.0 'structure_height.txt' IDLA=3 FREE
-
-$ Porosity parameters for rock: Dn50={{ breakwater.armour_dn50 }}m, height={{ breakwater.crest_height }}m
-POROSITY {{ breakwater.armour_dn50 }} {{ breakwater.crest_height }} 200.0 1.1 {{ water.wave_period }}
+$ Porosity parameters for rock: Dn50={{ breakwater.armour_dn50 }}m
+POROSITY {{ breakwater.armour_dn50 }} 99999 200.0 1.1 {{ water.wave_period }}
 {%- endif %}
 
 {%- if vegetation.enable and breakwater.enable %}

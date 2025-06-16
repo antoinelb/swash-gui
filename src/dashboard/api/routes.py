@@ -8,8 +8,8 @@ from starlette.routing import Route
 
 from src import config as config_module
 from src.simulation import run_simulation
-from src.wavelength import compute_wavelength
 from src.utils.paths import root_dir
+from src.wavelength import compute_wavelength
 
 CONFIG_DIR = Path("config")
 
