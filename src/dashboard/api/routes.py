@@ -242,7 +242,20 @@ async def get_analysis_results(request: Request) -> JSONResponse:
             wave_stats_df = pl.read_csv(wave_stats_file)
             wave_stats = wave_stats_df.to_dicts()
 
-        return JSONResponse({"plot_data": plot_data, "wave_stats": wave_stats})
+        # Load SWASH diagram if available
+        swash_plot_file = analysis_dir / "swash_diagram.json"
+        swash_plot_data = None
+        if swash_plot_file.exists():
+            with open(swash_plot_file, "r") as f:
+                swash_plot_data = json.load(f)
+
+        return JSONResponse(
+            {
+                "plot_data": plot_data,
+                "swash_plot_data": swash_plot_data,
+                "wave_stats": wave_stats,
+            }
+        )
     except Exception as e:
         print(f"Error getting analysis results for {name}: {e}")
         traceback.print_exc()
